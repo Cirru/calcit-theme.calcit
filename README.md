@@ -1,32 +1,13 @@
 
-Respo workflow in Calcit-js
+Calcit-theme for calcit-js.
 ----
 
-> Respo web page based on calcit-js.
-
-Demo http://repo.calcit-lang.org/respo-calcit-workflow/ .
+> ported from calcit-theme ClojureScript.
 
 ### Usages
 
-To develop:
+_TODO_
 
-```bash
-cr --emit-js # watching
-
-cp -v http://js.calcit-lang.org/calcit.procs.mjs js-out/
-
-yarn # to install vite
-yarn vite # watching and running on localhost:3000
-```
-
-calcit-js is using [Calcit Editor](https://github.com/Cirru/calcit-editor).
-
-To build:
-
-```bash
-yarn vite build
-http-server dist/
-```
 
 ### Workflow
 

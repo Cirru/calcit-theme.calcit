@@ -1,60 +1,117 @@
 
-{} (:package |app)
-  :configs $ {} (:init-fn |app.main/main!) (:reload-fn |app.main/reload!) (:modules $ [] |respo.calcit/compact.cirru |lilac/compact.cirru |memof/compact.cirru |respo-ui.calcit/compact.cirru |respo-markdown.calcit/compact.cirru |reel.calcit/compact.cirru) (:version |0.0.1)
+{} (:package |calcit-theme)
+  :configs $ {} (:init-fn |calcit-theme.main/main!) (:reload-fn |calcit-theme.main/reload!) (:modules $ [] |memof/compact.cirru |lilac/compact.cirru |respo.calcit/compact.cirru |respo-ui.calcit/compact.cirru |reel.calcit/compact.cirru) (:version |0.2.0)
   :files $ {}
-    |app.comp.container $ {}
+    |calcit-theme.comp.expr $ {}
       :ns $ quote
-        ns app.comp.container $ :require ([] hsl.core :refer $ [] hsl) ([] respo-ui.core :as ui) ([] respo.core :refer $ [] defcomp defeffect <> >> div button textarea span input) ([] respo.comp.space :refer $ [] =<) ([] reel.comp.reel :refer $ [] comp-reel) ([] respo-md.comp.md :refer $ [] comp-md) ([] app.config :refer $ [] dev?)
+        ns calcit-theme.comp.expr $ :require ([] hsl.core :refer $ [] hsl) ([] respo-ui.core :as ui) ([] respo.core :refer $ [] defcomp list-> <> div button textarea span) ([] respo.comp.space :refer $ [] =<) ([] calcit-theme.config :refer $ [] dev?) ([] calcit-theme.theme :as theme)
+      :defs $ {}
+        |comp-expr $ quote
+          defcomp comp-expr (expr tailing? root?)
+            list->
+              {} $ :style (merge theme/style-expr $ theme/decorate-expr expr tailing? root?)
+              ->> expr $ map-indexed
+                fn (idx child)
+                  [] idx $ if (string? child)
+                    div
+                      {} $ :style
+                        merge theme/style-leaf $ theme/decorate-leaf child (&= 0 idx)
+                      <> child
+                    comp-expr child
+                      = (inc idx) (count expr)
+                      , false
+        |render-expr $ quote
+          defn render-expr (data) (comp-expr data false true)
+      :proc $ quote ()
+    |calcit-theme.updater $ {}
+      :ns $ quote
+        ns calcit-theme.updater $ :require ([] respo.cursor :refer $ [] update-states)
+      :defs $ {}
+        |updater $ quote
+          defn updater (store op op-data op-id op-time)
+            case op (:states $ update-states store op-data) (:content $ assoc store :content op-data) (:hydrate-storage op-data) (op store)
+      :proc $ quote ()
+      :configs $ {} (:extension nil)
+    |calcit-theme.comp.container $ {}
+      :ns $ quote
+        ns calcit-theme.comp.container $ :require ([] respo.util.format :refer $ [] hsl) ([] respo-ui.core :as ui) ([] respo.core :refer $ [] defcomp >> <> div button textarea span) ([] respo.comp.space :refer $ [] =<) ([] reel.comp.reel :refer $ [] comp-reel) ([] calcit-theme.config :refer $ [] dev?) ([] calcit-theme.comp.expr :refer $ [] comp-expr render-expr)
       :defs $ {}
         |comp-container $ quote
           defcomp comp-container (reel)
             let
                 store $ :store reel
                 states $ :states store
-                cursor $ either (:cursor states) ([])
-                state $ either (:data states) ({} $ :content "\"")
+                data $ to-calcit-data (js/JSON.parse $ slurp "\"demo.json")
               div
-                {} $ :style (merge ui/global ui/row)
-                textarea $ {} (:value $ :content state) (:placeholder "\"Content")
-                  :style $ merge ui/expand ui/textarea ({} $ :height 320)
-                  :on-input $ fn (e d!)
-                    d! cursor $ assoc state :content (:value e)
-                =< 8 nil
-                div ({} $ :style ui/expand) (comp-md "|This is some content with `code`") (=< |8px nil)
-                  button $ {} (:style ui/button) (:inner-text "\"Run")
-                    :on-click $ fn (e d!) (println $ :content state)
+                {} $ :style
+                  merge ui/global ui/fullscreen $ {} (:background-color :black)
+                render-expr data
                 when dev? $ comp-reel (>> states :reel) reel ({})
+        |slurp $ quote
+          defmacro slurp (file) (read-file file)
       :proc $ quote ()
-    |app.config $ {}
-      :ns $ quote (ns app.config)
-      :defs $ {}
-        |cdn? $ quote
-          def cdn? $ cond
-              exists? js/window
-              , false
-            (exists? js/process)
-              = "\"true" js/process.env.cdn
-            :else false
-        |dev? $ quote (def dev? true)
-        |site $ quote
-          def site $ {} (:dev-ui "\"http://localhost:8100/main-fonts.css") (:release-ui "\"http://cdn.tiye.me/favored-fonts/main-fonts.css") (:cdn-url "\"http://cdn.tiye.me/calcit-workflow/") (:title "\"Calcit") (:icon "\"http://cdn.tiye.me/logo/mvc-works.png") (:storage-key "\"workflow")
-      :proc $ quote ()
-    |app.main $ {}
+    |calcit-theme.theme $ {}
       :ns $ quote
-        ns app.main $ :require ([] respo.core :refer $ [] render! clear-cache! realize-ssr!) ([] app.comp.container :refer $ [] comp-container) ([] app.updater :refer $ [] updater) ([] app.schema :as schema) ([] reel.util :refer $ [] listen-devtools!) ([] reel.core :refer $ [] reel-updater refresh-reel) ([] reel.schema :as reel-schema) ([] app.config :as config)
+        ns calcit-theme.theme $ :require ([] respo-ui.core :as ui) ([] respo.util.format :refer $ [] hsl)
+      :defs $ {}
+        |decorate-expr $ quote
+          defn decorate-expr (expr tailing? root?)
+            cond
+              root? $ {} (:display :inline-block) (:margin-bottom 0)
+              tailing? $ {} (:display :inline-block) (:margin-bottom 0)
+              (expr-simple? expr)
+                {} (:display :inline-block) (:border-left "\"none")
+                  :border-bottom $ str "\"1px solid " (hsl 0 0 100 0.3)
+                  :padding "\"2px 4px"
+                  :margin-bottom 0
+              true $ {}
+        |decorate-leaf $ quote
+          defn decorate-leaf (text leading?)
+            cond
+                starts-with? text "\":"
+                {} $ :color (hsl 240 30 64)
+              (or (starts-with? text "\"\"") (starts-with? text "\"|"))
+                if (contains? text "\" ")
+                  {} (:color $ hsl 120 60 56) (:background-color $ hsl 0 0 100 0.12)
+                  {} $ :color (hsl 120 60 56)
+              (starts-with? text "\"#\"")
+                {} $ :color (hsl 300 60 56)
+              (or (= text "\"true") (= text "\"false"))
+                {} $ :color (hsl 250 50 60)
+              (= text "\"nil")
+                {} $ :color (hsl 310 60 40)
+              (re-matches "\"^-?\\d" text)
+                {} $ :color (hsl 0 70 40)
+              leading? $ {} (:color $ hsl 40 85 60)
+              true $ {}
+        |expr-simple? $ quote
+          defn expr-simple? (expr)
+            and (every? string? expr)
+              < (count expr) 6
+        |style-expr $ quote
+          def style-expr $ {} (:display :block)
+            :border-left $ str "\"1px solid " (hsl 0 0 100 0.3)
+            :color :white
+            :vertical-align :top
+            :padding "\"4px 4px 0px 8px"
+            :margin-left 8
+            :margin-bottom 4
+        |style-leaf $ quote
+          def style-leaf $ {} (:display :inline-block) (:text-align :top) (:font-family ui/font-code) (:margin "\"0 4px") (:padding "\"0 4px") (:color $ hsl 200 14 60)
+      :proc $ quote ()
+    |calcit-theme.main $ {}
+      :ns $ quote
+        ns calcit-theme.main $ :require ([] respo.core :refer $ [] render! clear-cache! realize-ssr!) ([] calcit-theme.comp.container :refer $ [] comp-container) ([] calcit-theme.updater :refer $ [] updater) ([] calcit-theme.schema :as schema) ([] reel.util :refer $ [] listen-devtools!) ([] reel.core :refer $ [] reel-updater refresh-reel) ([] reel.schema :as reel-schema) ([] calcit-theme.config :as config)
       :defs $ {}
         |ssr? $ quote
           def ssr? $ some? (js/document.querySelector |meta.respo-ssr)
         |repeat! $ quote
           defn repeat! (duration cb)
             js/setTimeout
-              fn () (echo "\"called") (cb)
-                repeat! (* 1000 duration) cb
-              * 1000 duration
+              fn () (cb) (repeat! duration cb)
+              * duration 1000
         |dispatch! $ quote
-          defn dispatch! (op op-data)
-            when (and config/dev? $ not= op :states) (println "\"Dispatch:" op)
-            reset! *reel $ reel-updater updater @*reel op op-data
+          defn dispatch! (op op-data) (; println |Dispatch: op) (reset! *reel $ reel-updater updater @*reel op op-data)
         |main! $ quote
           defn main! () (println "\"Running mode:" $ if config/dev? "\"dev" "\"release") (if ssr? $ render-app! realize-ssr!) (render-app! render!)
             add-watch *reel :changes $ fn () (render-app! render!)
@@ -72,8 +129,6 @@
               js/JSON.stringify $ to-cirru-edn (:store @*reel)
         |*reel $ quote
           defatom *reel $ -> reel-schema/reel (assoc :base schema/store) (assoc :store schema/store)
-        |snippets $ quote
-          defn snippets () (println config/cdn?)
         |render-app! $ quote
           defn render-app! (renderer)
             renderer mount-target (comp-container @*reel) (\ dispatch! % %2)
@@ -81,18 +136,23 @@
           defn reload! () (clear-cache!) (reset! *reel $ refresh-reel @*reel schema/store updater) (println "|Code updated.")
         |mount-target $ quote (def mount-target $ .querySelector js/document |.app)
       :proc $ quote ()
-    |app.schema $ {}
-      :ns $ quote (ns app.schema)
+    |calcit-theme.schema $ {}
+      :ns $ quote (ns calcit-theme.schema)
       :defs $ {}
         |store $ quote
-          def store $ {}
-            :states $ {} (:cursor $ [])
+          def store $ {} (:states $ {}) (:content |)
       :proc $ quote ()
-    |app.updater $ {}
-      :ns $ quote
-        ns app.updater $ :require ([] respo.cursor :refer $ [] update-states)
+    |calcit-theme.config $ {}
+      :ns $ quote (ns calcit-theme.config)
       :defs $ {}
-        |updater $ quote
-          defn updater (store op data op-id op-time)
-            case op (:states $ update-states store data) (:hydrate-storage data) (op store)
+        |cdn? $ quote
+          def cdn? $ cond
+              exists? js/window
+              , false
+            (exists? js/process)
+              = "\"true" js/process.env.cdn
+            :else false
+        |dev? $ quote (def dev? true)
+        |site $ quote
+          def site $ {} (:dev-ui "\"http://localhost:8100/main.css") (:release-ui "\"http://cdn.tiye.me/favored-fonts/main.css") (:cdn-url "\"http://cdn.tiye.me/calcit-theme/") (:cdn-folder "\"tiye.me:cdn/calcit-theme") (:title "\"Calcit Theme") (:icon "\"http://cdn.tiye.me/logo/cirru.png") (:storage-key "\"calcit-theme") (:upload-folder "\"tiye.me:repo/Cirru/calcit-theme/")
       :proc $ quote ()
