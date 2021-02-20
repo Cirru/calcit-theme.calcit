@@ -21,15 +21,14 @@ jobs:
         mkdir -p ~/.config/calcit/modules/ && cd ~/.config/calcit/modules/
         && git clone https://github.com/calcit-lang/lilac.git
         && git clone https://github.com/calcit-lang/memof.git
-        && git clone https://github.com/Respo/respo.calcit.git --branch 0.14.1
+        && git clone https://github.com/Respo/respo.calcit.git
         && git clone https://github.com/Respo/reel.calcit.git
         && git clone https://github.com/Respo/respo-markdown.calcit.git
         && git clone https://github.com/Respo/respo-ui.calcit.git
 
     - name: "compiles to js"
       run: >
-        ./ci-bin/cr_once --emit-js --once
-        && wget -O js-out/calcit.procs.mjs http://js.calcit-lang.org/calcit.procs.mjs
+        ./ci-bin/cr_once --emit-js
         && yarn && yarn vite build --base=./
 
     - name: Deploy to server
