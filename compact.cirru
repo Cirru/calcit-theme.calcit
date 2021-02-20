@@ -2,7 +2,7 @@
 {} (:package |calcit-theme)
   :configs $ {} (:init-fn |calcit-theme.main/main!) (:reload-fn |calcit-theme.main/reload!)
     :modules $ [] |memof/compact.cirru |lilac/compact.cirru |respo.calcit/compact.cirru |respo-ui.calcit/compact.cirru |reel.calcit/compact.cirru
-    :version |0.2.0
+    :version |0.2.1
   :files $ {}
     |calcit-theme.comp.expr $ {}
       :ns $ quote
@@ -15,20 +15,51 @@
           [] calcit-theme.theme :as theme
       :defs $ {}
         |comp-expr $ quote
-          defcomp comp-expr (expr tailing? root?)
+          defcomp comp-expr (expr tailing? root? inline?)
             assert "\"expr in list" $ list? expr
             div
               {} $ :style
-                merge theme/style-expr $ theme/decorate-expr expr tailing? root?
-              , & $ ->> expr
-                map-indexed $ fn (idx child)
-                  if (string? child)
-                    comp-leaf child $ &= 0 idx
-                    comp-expr child
-                      = (inc idx) (count expr)
-                      , false
+                merge theme/style-expr $ theme/decorate-expr tailing? inline? root?
+              , & $ apply-args
+                [] ([]) expr 0 nil
+                fn (acc xs idx prev-kind)
+                  cond
+                    
+                      empty? xs
+                      , acc
+                    (string? (first xs))
+                      recur
+                        conj acc $ comp-leaf (first xs) (&= 0 idx)
+                        rest xs
+                        inc idx
+                        , :leaf
+                    (&let (cursor (first xs)) (and (= 1 (count cursor)) (string? (first cursor))))
+                      recur
+                        conj acc $ comp-expr (first xs) false false true
+                        rest xs
+                        inc idx
+                        , :leaf
+                    true $ let
+                        cursor $ first xs
+                        size $ count cursor
+                        simple? $ every? string? cursor
+                        layout-kind $ if simple?
+                          case prev-kind
+                            nil $ if (> size 6) :expr :inline-expr
+                            :leaf $ if (> size 6) :expr :inline-expr
+                            :inline-expr $ if (> size 2) :expr :inline-expr
+                            :expr :expr
+                            prev-kind $ raise "\"Unpected case"
+                          , :expr
+                      recur
+                        conj acc $ comp-expr cursor
+                          = (inc idx) (count expr)
+                          , false (= layout-kind :inline-expr)
+                        rest xs
+                        inc idx
+                        , layout-kind
         |render-expr $ quote
-          defn render-expr (data) (comp-expr data false true)
+          defn render-expr (data) (comp-expr data false true false)
         |comp-leaf $ quote
           defcomp comp-leaf (x head?)
             assert "\"string for leaf" $ string? x
@@ -83,15 +114,14 @@
           [] respo.util.format :refer $ [] hsl
       :defs $ {}
         |decorate-expr $ quote
-          defn decorate-expr (expr tailing? root?)
+          defn decorate-expr (tailing? inline? root?)
             cond
               root? $ {} (:display :inline-block) (:margin-bottom 0)
               tailing? $ {} (:display :inline-block) (:margin-bottom 0)
-              (expr-simple? expr)
-                {} (:display :inline-block) (:border-left "\"none")
-                  :border-bottom $ str "\"1px solid " (hsl 0 0 100 0.3)
-                  :padding "\"2px 4px"
-                  :margin-bottom 0
+              inline? $ {} (:display :inline-block) (:border-left "\"none")
+                :border-bottom $ str "\"1px solid " (hsl 0 0 100 0.3)
+                :padding "\"2px 4px"
+                :margin-bottom 0
               true $ {}
         |decorate-leaf $ quote
           defn decorate-leaf (text leading?)
@@ -160,7 +190,7 @@
             render-app! render!
             add-watch *reel :changes $ fn (reel prev) (render-app! render!)
             listen-devtools! |a dispatch!
-            .addEventListener js/window |beforeunload persist-storage!
+            .addEventListener js/window |beforeunload $ fn (event) (persist-storage!)
             repeat! 60 persist-storage!
             let
                 raw $ .getItem js/localStorage (:storage-key config/site)
@@ -168,9 +198,8 @@
                 dispatch! :hydrate-storage $ extract-cirru-edn (js/JSON.parse raw)
             println "|App started."
         |persist-storage! $ quote
-          defn persist-storage! (event)
-            .setItem js/localStorage (:storage-key config/site)
-              js/JSON.stringify $ to-cirru-edn (:store @*reel)
+          defn persist-storage! () $ .setItem js/localStorage (:storage-key config/site)
+            js/JSON.stringify $ to-cirru-edn (:store @*reel)
         |*reel $ quote
           defatom *reel $ -> reel-schema/reel (assoc :base schema/store) (assoc :store schema/store)
         |render-app! $ quote
