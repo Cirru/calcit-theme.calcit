@@ -247,8 +247,8 @@
                                               |j $ {} (:type :expr) (:by |rJG4IHzWf) (:at 1613809284062)
                                                 :data $ {}
                                                   |T $ {} (:type :leaf) (:by |rJG4IHzWf) (:at 1613809284062) (:text |every?)
-                                                  |j $ {} (:type :leaf) (:by |rJG4IHzWf) (:at 1613809284062) (:text |string?)
                                                   |r $ {} (:type :leaf) (:by |rJG4IHzWf) (:at 1613809284062) (:text |cursor)
+                                                  |v $ {} (:type :leaf) (:by |rJG4IHzWf) (:at 1619709910252) (:text |string?)
                                   |D $ {} (:type :leaf) (:by |rJG4IHzWf) (:at 1613808354475) (:text |true)
                               |D $ {} (:type :leaf) (:by |rJG4IHzWf) (:at 1613808349071) (:text |cond)
                               |L $ {} (:type :expr) (:by |rJG4IHzWf) (:at 1613808349425)
@@ -908,8 +908,8 @@
                       |T $ {} (:type :expr) (:by |rJG4IHzWf) (:at 1546536843896)
                         :data $ {}
                           |T $ {} (:type :leaf) (:by |rJG4IHzWf) (:at 1546536856711) (:text |re-matches)
-                          |j $ {} (:type :leaf) (:by |rJG4IHzWf) (:at 1546536908494) (:text "|\"^-?\\d")
                           |r $ {} (:type :leaf) (:by |rJG4IHzWf) (:at 1546536911528) (:text |text)
+                          |v $ {} (:type :leaf) (:by |rJG4IHzWf) (:at 1619710237332) (:text "|\"^-?\\d")
                       |j $ {} (:type :expr) (:by |rJG4IHzWf) (:at 1546536913889)
                         :data $ {}
                           |T $ {} (:type :leaf) (:by |rJG4IHzWf) (:at 1546536914888) (:text |{})
@@ -1525,4 +1525,4 @@
     :init-fn |calcit-theme.main/main!
     :compact-output? true
     :storage-key |calcit.cirru
-    :version |0.2.1
+    :version |0.2.2
