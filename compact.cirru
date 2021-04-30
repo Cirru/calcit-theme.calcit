@@ -2,7 +2,7 @@
 {} (:package |calcit-theme)
   :configs $ {} (:init-fn |calcit-theme.main/main!) (:reload-fn |calcit-theme.main/reload!)
     :modules $ [] |memof/compact.cirru |lilac/compact.cirru |respo.calcit/compact.cirru |respo-ui.calcit/compact.cirru |reel.calcit/compact.cirru
-    :version |0.2.1
+    :version |0.2.2
   :files $ {}
     |calcit-theme.comp.expr $ {}
       :ns $ quote
@@ -24,7 +24,6 @@
                 [] ([]) expr 0 nil
                 fn (acc xs idx prev-kind)
                   cond
-                    
                       empty? xs
                       , acc
                     (string? (first xs))
@@ -42,7 +41,7 @@
                     true $ let
                         cursor $ first xs
                         size $ count cursor
-                        simple? $ every? string? cursor
+                        simple? $ every? cursor string?
                         layout-kind $ if simple?
                           case prev-kind
                             nil $ if (> size 6) :expr :inline-expr
@@ -140,7 +139,7 @@
                 {} $ :color (hsl 250 50 60)
               (= text "\"nil")
                 {} $ :color (hsl 310 60 40)
-              (re-matches "\"^-?\\d" text)
+              (re-matches text "\"^-?\\d")
                 {} $ :color (hsl 0 70 40)
               leading? $ {}
                 :color $ hsl 40 85 60
@@ -226,7 +225,6 @@
       :defs $ {}
         |cdn? $ quote
           def cdn? $ cond
-            
               exists? js/window
               , false
             (exists? js/process) (= "\"true" js/process.env.cdn)
