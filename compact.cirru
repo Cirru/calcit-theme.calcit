@@ -3,6 +3,7 @@
   :configs $ {} (:init-fn |calcit-theme.main/main!) (:reload-fn |calcit-theme.main/reload!)
     :modules $ [] |memof/compact.cirru |lilac/compact.cirru |respo.calcit/compact.cirru |respo-ui.calcit/compact.cirru |reel.calcit/compact.cirru
     :version |0.2.3
+  :entries $ {}
   :files $ {}
     |calcit-theme.config $ {}
       :ns $ quote (ns calcit-theme.config)
@@ -213,8 +214,7 @@
             let
                 store $ :store reel
                 states $ :states store
-                data $ to-calcit-data
-                  js/JSON.parse $ slurp "\"demo.json"
+                data $ parse-cirru (slurp "\"examples/demo.cirru")
               div
                 {} $ :style
                   merge ui/global ui/fullscreen $ {} (:background-color :black)
