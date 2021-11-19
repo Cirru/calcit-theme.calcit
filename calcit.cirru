@@ -1,9 +1,8 @@
 
 {}
-  :configs $ {} (:reload-fn |calcit-theme.main/reload!) (:port 6001) (:output |src) (:compact-output? true) (:storage-key |calcit.cirru) (:version |0.2.3)
-    :modules $ [] |memof/compact.cirru |lilac/compact.cirru |respo.calcit/compact.cirru |respo-ui.calcit/compact.cirru |reel.calcit/compact.cirru
-    :init-fn |calcit-theme.main/main!
-    :extension |.cljs
+  :users $ {}
+    |root $ {} (:avatar nil) (:name |root) (:nickname |root) (:id |root) (:theme :star-trail) (:password |d41d8cd98f00b204e9800998ecf8427e)
+    |rJG4IHzWf $ {} (:avatar nil) (:name |chen) (:nickname |chen) (:id |rJG4IHzWf) (:theme :star-trail) (:password |d41d8cd98f00b204e9800998ecf8427e)
   :ir $ {} (:package |calcit-theme)
     :files $ {}
       |calcit-theme.config $ {}
@@ -2321,22 +2320,16 @@
                           |T $ {} (:text |data) (:type :leaf) (:at 1546450453672) (:by |rJG4IHzWf)
                           |j $ {}
                             :data $ {}
-                              |D $ {} (:text |to-calcit-data) (:type :leaf) (:at 1610892895874) (:by |rJG4IHzWf)
+                              |D $ {} (:text |parse-cirru) (:type :leaf) (:at 1637065156867) (:by |rJG4IHzWf)
                               |T $ {}
                                 :data $ {}
-                                  |D $ {} (:text |js/JSON.parse) (:type :leaf) (:at 1610892885467) (:by |rJG4IHzWf)
-                                  |T $ {}
-                                    :data $ {}
-                                      |T $ {} (:text |slurp) (:type :leaf) (:at 1610895132069) (:by |rJG4IHzWf)
-                                      |j $ {} (:text "|\"demo.json") (:type :leaf) (:at 1610895134065) (:by |rJG4IHzWf)
-                                    :type :expr
-                                    :at 1610895130275
-                                    :by |rJG4IHzWf
+                                  |T $ {} (:text |slurp) (:type :leaf) (:at 1610895132069) (:by |rJG4IHzWf)
+                                  |j $ {} (:text "|\"examples/demo.cirru") (:type :leaf) (:at 1637065221163) (:by |rJG4IHzWf)
                                 :type :expr
-                                :at 1546450454709
+                                :at 1610895130275
                                 :by |rJG4IHzWf
                             :type :expr
-                            :at 1610892886188
+                            :at 1546450454709
                             :by |rJG4IHzWf
                         :type :expr
                         :at 1546450452919
@@ -2553,6 +2546,8 @@
               :at 1499755354983
           :type :expr
           :at 1499755354983
-  :users $ {}
-    |root $ {} (:avatar nil) (:name |root) (:nickname |root) (:id |root) (:theme :star-trail) (:password |d41d8cd98f00b204e9800998ecf8427e)
-    |rJG4IHzWf $ {} (:avatar nil) (:name |chen) (:nickname |chen) (:id |rJG4IHzWf) (:theme :star-trail) (:password |d41d8cd98f00b204e9800998ecf8427e)
+  :configs $ {} (:reload-fn |calcit-theme.main/reload!) (:port 6001) (:output |src) (:compact-output? true) (:storage-key |calcit.cirru) (:version |0.2.3)
+    :modules $ [] |memof/compact.cirru |lilac/compact.cirru |respo.calcit/compact.cirru |respo-ui.calcit/compact.cirru |reel.calcit/compact.cirru
+    :init-fn |calcit-theme.main/main!
+    :extension |.cljs
+  :entries $ {}
