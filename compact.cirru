@@ -104,7 +104,7 @@
     |calcit-theme.config $ {}
       :defs $ {}
         |dev? $ quote
-          def dev? $ = "\"dev" (get-env "\"release")
+          def dev? $ = "\"dev" (get-env "\"mode" "\"release")
         |site $ quote
           def site $ {} (:title "\"Calcit Theme") (:icon "\"http://cdn.tiye.me/logo/cirru.png") (:storage-key "\"calcit-theme")
       :ns $ quote (ns calcit-theme.config)

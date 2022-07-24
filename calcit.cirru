@@ -635,6 +635,7 @@
                   |T $ {} (:at 1656005893019) (:by |rJG4IHzWf) (:type :expr)
                     :data $ {}
                       |T $ {} (:at 1656005894983) (:by |rJG4IHzWf) (:text |get-env) (:type :leaf)
+                      |X $ {} (:at 1658662916588) (:by |rJG4IHzWf) (:text "|\"mode") (:type :leaf)
                       |b $ {} (:at 1656005896379) (:by |rJG4IHzWf) (:text "|\"release") (:type :leaf)
           |site $ {} (:at 1518157327696) (:by |root) (:type :expr)
             :data $ {}
