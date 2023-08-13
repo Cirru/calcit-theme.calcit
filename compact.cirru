@@ -1,7 +1,7 @@
 
 {} (:package |calcit-theme)
-  :configs $ {} (:init-fn |calcit-theme.main/main!) (:reload-fn |calcit-theme.main/reload!) (:version |0.2.4)
-    :modules $ [] |memof/compact.cirru |lilac/compact.cirru |respo.calcit/compact.cirru |respo-ui.calcit/compact.cirru |reel.calcit/compact.cirru
+  :configs $ {} (:init-fn |calcit-theme.main/main!) (:reload-fn |calcit-theme.main/reload!) (:version |0.2.5)
+    :modules $ [] |memof/ |lilac/ |respo.calcit/ |respo-ui.calcit/ |reel.calcit/
   :entries $ {}
   :files $ {}
     |calcit-theme.comp.container $ {}
@@ -11,7 +11,7 @@
             let
                 store $ :store reel
                 states $ :states store
-                data $ parse-cirru (slurp "\"examples/demo.cirru")
+                data $ parse-cirru-list (slurp "\"examples/demo.cirru")
               div
                 {} $ :class-name css-body
                 render-expr data
@@ -37,10 +37,10 @@
         |comp-expr $ quote
           defcomp comp-expr (expr tailing? root? inline?)
             assert "\"expr in list" $ list? expr
-            div
+            list->
               {} (:class-name css-expr)
                 :style $ merge (theme/decorate-expr tailing? inline? root?)
-              , & $ apply-args
+              apply-args
                 [] ([]) expr 0 nil
                 fn (acc xs idx prev-kind)
                   cond
@@ -48,13 +48,15 @@
                       , acc
                     (string? (first xs))
                       recur
-                        conj acc $ comp-leaf (first xs) (&= 0 idx)
+                        conj acc $ [] idx
+                          comp-leaf (first xs) (&= 0 idx)
                         rest xs
                         inc idx
                         , :leaf
                     (&let (cursor (first xs)) (and (= 1 (count cursor)) (string? (first cursor))))
                       recur
-                        conj acc $ comp-expr (first xs) false false true
+                        conj acc $ [] idx
+                          comp-expr (first xs) false false true
                         rest xs
                         inc idx
                         , :leaf
@@ -71,9 +73,10 @@
                             prev-kind $ raise "\"Unpected case"
                           , :expr
                       recur
-                        conj acc $ comp-expr cursor
-                          = (inc idx) (count expr)
-                          , false (= layout-kind :inline-expr)
+                        conj acc $ [] idx
+                          comp-expr cursor
+                            = (inc idx) (count expr)
+                            , false $ = layout-kind :inline-expr
                         rest xs
                         inc idx
                         , layout-kind
@@ -113,20 +116,21 @@
         |*reel $ quote
           defatom *reel $ -> reel-schema/reel (assoc :base schema/store) (assoc :store schema/store)
         |dispatch! $ quote
-          defn dispatch! (op op-data) (; println |Dispatch: op)
-            reset! *reel $ reel-updater updater @*reel op op-data
+          defn dispatch! (op) (; println |Dispatch: op)
+            reset! *reel $ reel-updater updater @*reel op
         |main! $ quote
           defn main! ()
             println "\"Running mode:" $ if config/dev? "\"dev" "\"release"
             render-app! render!
             add-watch *reel :changes $ fn (reel prev) (render-app! render!)
             listen-devtools! |a dispatch!
-            .!addEventListener js/window |beforeunload $ fn (event) (persist-storage!)
+            js/window.addEventListener |beforeunload $ fn (event) (persist-storage!)
             repeat! 60 persist-storage!
             let
-                raw $ .!getItem js/localStorage (:storage-key config/site)
+                raw $ js/localStorage.getItem (:storage-key config/site)
               when (some? raw)
-                dispatch! :hydrate-storage $ extract-cirru-edn (js/JSON.parse raw)
+                dispatch! $ :: :hydrate-storage
+                  extract-cirru-edn $ js/JSON.parse raw
             println "|App started."
         |mount-target $ quote
           def mount-target $ .querySelector js/document |.app
@@ -143,7 +147,7 @@
             hud! "\"error" build-errors
         |render-app! $ quote
           defn render-app! (renderer)
-            renderer mount-target (comp-container @*reel) (\ dispatch! % %2)
+            renderer mount-target (comp-container @*reel) dispatch!
         |repeat! $ quote
           defn repeat! (duration cb)
             js/setTimeout
@@ -206,8 +210,10 @@
         |style-expr $ quote
           def style-expr $ {} (:display :block) (:border-radius "\"8px") (:color :white) (:vertical-align :top) (:padding "\"4px 4px 0px 8px") (:margin-left 8) (:margin-bottom 4) (:transition-duration "\"240ms") (:border-width "\"0 0 0 1px") (:border-style :solid)
             :border-color $ hsl 0 0 100 0.3
+            :min-height 24
+            :min-width 8
         |style-leaf $ quote
-          def style-leaf $ {} (:display :inline-block) (:text-align :top) (:font-family ui/font-code) (:margin "\"0 4px") (:padding "\"0 4px")
+          def style-leaf $ {} (:display :inline-block) (:vertical-align :top) (:font-family ui/font-code) (:margin "\"0 4px") (:padding "\"0 4px")
             :color $ hsl 200 14 60
       :ns $ quote
         ns calcit-theme.theme $ :require ( respo-ui.core :as ui)
@@ -215,12 +221,13 @@
     |calcit-theme.updater $ {}
       :defs $ {}
         |updater $ quote
-          defn updater (store op op-data op-id op-time)
-            case-default op
-              do (js/console.warn "\"unknown op:" op) store
-              :states $ update-states store op-data
-              :content $ assoc store :content op-data
-              :hydrate-storage op-data
+          defn updater (store op op-id op-time)
+            tag-match op
+                :states cursor s
+                update-states store cursor s
+              (:content c) (assoc store :content c)
+              (:hydrate-storage d) d
+              _ $ do (eprintln "\"unknown op:" op) store
       :ns $ quote
         ns calcit-theme.updater $ :require
           respo.cursor :refer $ update-states
