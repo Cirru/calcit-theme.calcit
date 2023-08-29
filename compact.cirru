@@ -1,10 +1,10 @@
 
 {} (:package |calcit-theme)
-  :configs $ {} (:init-fn |calcit-theme.main/main!) (:reload-fn |calcit-theme.main/reload!) (:version |0.3.0)
+  :configs $ {} (:init-fn |calcit-theme.main/main!) (:reload-fn |calcit-theme.main/reload!) (:version |0.4.0)
     :modules $ [] |memof/ |lilac/ |respo.calcit/ |respo-ui.calcit/ |reel.calcit/
   :entries $ {}
   :files $ {}
-    |calcit-theme.comp.container $ {}
+    |calcit-theme.comp.container $ %{} :FileEntry
       :defs $ {}
         |comp-container $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -36,7 +36,7 @@
             reel.comp.reel :refer $ comp-reel
             calcit-theme.config :refer $ dev?
             calcit-theme.comp.expr :refer $ comp-expr render-expr
-    |calcit-theme.comp.expr $ {}
+    |calcit-theme.comp.expr $ %{} :FileEntry
       :defs $ {}
         |comp-expr $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -114,7 +114,7 @@
             respo.comp.space :refer $ =<
             calcit-theme.config :refer $ dev?
             calcit-theme.theme :as theme
-    |calcit-theme.config $ {}
+    |calcit-theme.config $ %{} :FileEntry
       :defs $ {}
         |dev? $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -124,7 +124,7 @@
             def site $ {} (:title "\"Calcit Theme") (:icon "\"http://cdn.tiye.me/logo/cirru.png") (:storage-key "\"calcit-theme")
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote (ns calcit-theme.config)
-    |calcit-theme.main $ {}
+    |calcit-theme.main $ %{} :FileEntry
       :defs $ {}
         |*reel $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -187,7 +187,7 @@
             calcit-theme.config :as config
             "\"./calcit.build-errors" :default build-errors
             "\"bottom-tip" :default hud!
-    |calcit-theme.schema $ {}
+    |calcit-theme.schema $ %{} :FileEntry
       :defs $ {}
         |store $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -196,7 +196,7 @@
               :content |
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote (ns calcit-theme.schema)
-    |calcit-theme.theme $ {}
+    |calcit-theme.theme $ %{} :FileEntry
       :defs $ {}
         |decorate-expr $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -248,7 +248,7 @@
         :code $ quote
           ns calcit-theme.theme $ :require ( respo-ui.core :as ui)
             respo.util.format :refer $ [] hsl
-    |calcit-theme.updater $ {}
+    |calcit-theme.updater $ %{} :FileEntry
       :defs $ {}
         |updater $ %{} :CodeEntry (:doc |)
           :code $ quote
