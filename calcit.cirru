@@ -1,10 +1,10 @@
 
 {} (:package |calcit-theme)
-  :configs $ {} (:compact-output? true) (:extension |.cljs) (:init-fn |calcit-theme.main/main!) (:output |src) (:port 6001) (:reload-fn |calcit-theme.main/reload!) (:storage-key |calcit.cirru) (:version |0.3.0)
+  :configs $ {} (:compact-output? true) (:extension |.cljs) (:init-fn |calcit-theme.main/main!) (:output |src) (:port 6001) (:reload-fn |calcit-theme.main/reload!) (:storage-key |calcit.cirru) (:version |0.4.0)
     :modules $ [] |memof/ |lilac/ |respo.calcit/ |respo-ui.calcit/ |reel.calcit/
   :entries $ {}
   :files $ {}
-    |calcit-theme.comp.container $ {}
+    |calcit-theme.comp.container $ %{} :FileEntry
       :defs $ {}
         |comp-container $ %{} :CodeEntry (:doc |)
           :code $ %{} :Expr (:at 1499755354983) (:by nil)
@@ -177,7 +177,7 @@
                       :data $ {}
                         |j $ %{} :Leaf (:at 1546450483099) (:by |rJG4IHzWf) (:text |comp-expr)
                         |r $ %{} :Leaf (:at 1546622304869) (:by |rJG4IHzWf) (:text |render-expr)
-    |calcit-theme.comp.expr $ {}
+    |calcit-theme.comp.expr $ %{} :FileEntry
       :defs $ {}
         |comp-expr $ %{} :CodeEntry (:doc |)
           :code $ %{} :Expr (:at 1499755354983) (:by nil)
@@ -638,7 +638,7 @@
                     |j $ %{} :Leaf (:at 1546535660078) (:by |rJG4IHzWf) (:text |calcit-theme.theme)
                     |r $ %{} :Leaf (:at 1546535660078) (:by |rJG4IHzWf) (:text |:as)
                     |v $ %{} :Leaf (:at 1546535660078) (:by |rJG4IHzWf) (:text |theme)
-    |calcit-theme.config $ {}
+    |calcit-theme.config $ %{} :FileEntry
       :defs $ {}
         |dev? $ %{} :CodeEntry (:doc |)
           :code $ %{} :Expr (:at 1544873875614) (:by |rJG4IHzWf)
@@ -679,7 +679,7 @@
           :data $ {}
             |T $ %{} :Leaf (:at 1527788237503) (:by |root) (:text |ns)
             |j $ %{} :Leaf (:at 1527788237503) (:by |root) (:text |calcit-theme.config)
-    |calcit-theme.main $ {}
+    |calcit-theme.main $ %{} :FileEntry
       :defs $ {}
         |*reel $ %{} :CodeEntry (:doc |)
           :code $ %{} :Expr (:at 1499755354983) (:by nil)
@@ -1042,7 +1042,7 @@
                     |T $ %{} :Leaf (:at 1656005491389) (:by |rJG4IHzWf) (:text "|\"bottom-tip")
                     |b $ %{} :Leaf (:at 1656005491389) (:by |rJG4IHzWf) (:text |:default)
                     |h $ %{} :Leaf (:at 1656005491389) (:by |rJG4IHzWf) (:text |hud!)
-    |calcit-theme.schema $ {}
+    |calcit-theme.schema $ %{} :FileEntry
       :defs $ {}
         |store $ %{} :CodeEntry (:doc |)
           :code $ %{} :Expr (:at 1499755354983) (:by nil)
@@ -1067,7 +1067,7 @@
           :data $ {}
             |T $ %{} :Leaf (:at 1499755354983) (:by |root) (:text |ns)
             |j $ %{} :Leaf (:at 1499755354983) (:by |root) (:text |calcit-theme.schema)
-    |calcit-theme.theme $ {}
+    |calcit-theme.theme $ %{} :FileEntry
       :defs $ {}
         |decorate-expr $ %{} :CodeEntry (:doc |)
           :code $ %{} :Expr (:at 1546536965817) (:by |rJG4IHzWf)
@@ -1484,8 +1484,7 @@
                       :data $ {}
                         |T $ %{} :Leaf (:at 1546536956128) (:by |rJG4IHzWf) (:text |[])
                         |j $ %{} :Leaf (:at 1546536956643) (:by |rJG4IHzWf) (:text |hsl)
-    |calcit-theme.updater $ {}
-      :configs $ {} (:extension nil)
+    |calcit-theme.updater $ %{} :FileEntry
       :defs $ {}
         |updater $ %{} :CodeEntry (:doc |)
           :code $ %{} :Expr (:at 1499755354983) (:by nil)
