@@ -1,6 +1,6 @@
 
 {} (:package |calcit-theme)
-  :configs $ {} (:init-fn |calcit-theme.main/main!) (:reload-fn |calcit-theme.main/reload!) (:version |0.4.1)
+  :configs $ {} (:init-fn |calcit-theme.main/main!) (:reload-fn |calcit-theme.main/reload!) (:version |0.4.2)
     :modules $ [] |memof/ |lilac/ |respo.calcit/ |respo-ui.calcit/ |reel.calcit/
   :entries $ {}
   :files $ {}
@@ -130,7 +130,7 @@
                 if (= action :mount)
                   .!addEventListener el "\"mouseover" $ fn (event)
                     let
-                        t $ w-js-log (.-target event)
+                        t $ .-target event
                       when
                         = "\"DIV" $ .-tagName t
                         if

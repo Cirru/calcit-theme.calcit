@@ -1,6 +1,6 @@
 
 {} (:package |calcit-theme)
-  :configs $ {} (:compact-output? true) (:extension |.cljs) (:init-fn |calcit-theme.main/main!) (:output |src) (:port 6001) (:reload-fn |calcit-theme.main/reload!) (:storage-key |calcit.cirru) (:version |0.4.1)
+  :configs $ {} (:compact-output? true) (:extension |.cljs) (:init-fn |calcit-theme.main/main!) (:output |src) (:port 6001) (:reload-fn |calcit-theme.main/reload!) (:storage-key |calcit.cirru) (:version |0.4.2)
     :modules $ [] |memof/ |lilac/ |respo.calcit/ |respo-ui.calcit/ |reel.calcit/
   :entries $ {}
   :files $ {}
@@ -767,13 +767,10 @@
                                           |T $ %{} :Expr (:at 1750500655544) (:by |rJG4IHzWf)
                                             :data $ {}
                                               |D $ %{} :Leaf (:at 1750500656083) (:by |rJG4IHzWf) (:text |t)
-                                              |T $ %{} :Expr (:at 1750501238225) (:by |rJG4IHzWf)
+                                              |T $ %{} :Expr (:at 1750500593415) (:by |rJG4IHzWf)
                                                 :data $ {}
-                                                  |D $ %{} :Leaf (:at 1750501241165) (:by |rJG4IHzWf) (:text |w-js-log)
-                                                  |T $ %{} :Expr (:at 1750500593415) (:by |rJG4IHzWf)
-                                                    :data $ {}
-                                                      |D $ %{} :Leaf (:at 1750501253124) (:by |rJG4IHzWf) (:text |.-target)
-                                                      |T $ %{} :Leaf (:at 1750500565939) (:by |rJG4IHzWf) (:text |event)
+                                                  |D $ %{} :Leaf (:at 1750501253124) (:by |rJG4IHzWf) (:text |.-target)
+                                                  |T $ %{} :Leaf (:at 1750500565939) (:by |rJG4IHzWf) (:text |event)
                                       |h $ %{} :Expr (:at 1750500908523) (:by |rJG4IHzWf)
                                         :data $ {}
                                           |D $ %{} :Leaf (:at 1750500912898) (:by |rJG4IHzWf) (:text |when)
