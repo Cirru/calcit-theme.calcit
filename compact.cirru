@@ -1,6 +1,6 @@
 
 {} (:package |calcit-theme)
-  :configs $ {} (:init-fn |calcit-theme.main/main!) (:reload-fn |calcit-theme.main/reload!) (:version |0.4.0)
+  :configs $ {} (:init-fn |calcit-theme.main/main!) (:reload-fn |calcit-theme.main/reload!) (:version |0.4.2)
     :modules $ [] |memof/ |lilac/ |respo.calcit/ |respo-ui.calcit/ |reel.calcit/
   :entries $ {}
   :files $ {}
@@ -42,49 +42,65 @@
           :code $ quote
             defcomp comp-expr (expr tailing? root? inline?)
               assert "\"expr in list" $ list? expr
-              list->
-                {} (:class-name css-expr)
-                  :style $ merge (theme/decorate-expr tailing? inline? root?)
-                apply-args
-                  [] ([]) expr 0 nil
-                  fn (acc xs idx prev-kind)
-                    cond
-                        empty? xs
-                        , acc
-                      (string? (first xs))
-                        recur
-                          conj acc $ [] idx
-                            comp-leaf (first xs) (&= 0 idx)
-                          rest xs
-                          inc idx
-                          , :leaf
-                      (&let (cursor (first xs)) (and (= 1 (count cursor)) (string? (first cursor))))
-                        recur
-                          conj acc $ [] idx
-                            comp-expr (first xs) false false true
-                          rest xs
-                          inc idx
-                          , :leaf
-                      true $ let
-                          cursor $ first xs
-                          size $ count cursor
-                          simple? $ every? cursor string?
-                          layout-kind $ if simple?
-                            case prev-kind
-                              nil $ if (> size 6) :expr :inline-expr
-                              :leaf $ if (> size 6) :expr :inline-expr
-                              :inline-expr $ if (> size 2) :expr :inline-expr
-                              :expr :expr
-                              prev-kind $ raise "\"Unpected case"
-                            , :expr
-                        recur
-                          conj acc $ [] idx
-                            comp-expr cursor
-                              = (inc idx) (count expr)
-                              , false $ = layout-kind :inline-expr
-                          rest xs
-                          inc idx
-                          , layout-kind
+              [] (effect-highlight root?)
+                list->
+                  {} (:class-name css-expr)
+                    :style $ theme/decorate-expr tailing? inline? root?
+                    :on-mousedown $ fn (e d!)
+                      let
+                          event $ :event e
+                          target $ .-target event
+                        if
+                          identical? target $ .-currentTarget event
+                          -> target .-classList $ .!add "\"on-active"
+                    :on-mouseup $ fn (e d!)
+                      let
+                          event $ :event e
+                          target $ .-target event
+                        if
+                          identical? target $ .-currentTarget event
+                          -> target .-classList $ .!remove "\"on-active"
+                  apply-args
+                      []
+                      , expr 0 nil
+                    fn (acc xs idx prev-kind)
+                      cond
+                          empty? xs
+                          , acc
+                        (string? (first xs))
+                          recur
+                            conj acc $ [] idx
+                              comp-leaf (first xs) (&= 0 idx)
+                            rest xs
+                            inc idx
+                            , :leaf
+                        (&let (cursor (first xs)) (and (= 1 (count cursor)) (string? (first cursor))))
+                          recur
+                            conj acc $ [] idx
+                              comp-expr (first xs) false false true
+                            rest xs
+                            inc idx
+                            , :leaf
+                        true $ let
+                            cursor $ first xs
+                            size $ count cursor
+                            simple? $ every? cursor string?
+                            layout-kind $ if simple?
+                              case-default prev-kind
+                                prev-kind $ raise "\"Unpected case"
+                                nil $ if (> size 6) :expr :inline-expr
+                                :leaf $ if (> size 6) :expr :inline-expr
+                                :inline-expr $ if (> size 2) :expr :inline-expr
+                                :expr :expr
+                              , :expr
+                          recur
+                            conj acc $ [] idx
+                              comp-expr cursor
+                                = (inc idx) (count expr)
+                                , false $ = layout-kind :inline-expr
+                            rest xs
+                            inc idx
+                            , layout-kind
         |comp-leaf $ %{} :CodeEntry (:doc |)
           :code $ quote
             defcomp comp-leaf (x head?)
@@ -95,12 +111,33 @@
                 <> x
         |css-expr $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defstyle css-expr $ {} ("\"$0" theme/style-expr)
-              "\"$0:hover" $ {}
+            defstyle css-expr $ {} ("\"&" theme/style-expr)
+              "\"&.on-hover" $ {}
                 :border-color $ hsl 0 0 100 0.7
+              "\"&.on-active" $ {} (:transform "\"translate(1px,0px)")
         |css-leaf $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defstyle css-leaf $ {} ("\"$0" theme/style-leaf)
+            defstyle css-leaf $ {} ("\"&" theme/style-leaf)
+              "\"&" $ {} (:user-select :text)
+              "\"&:hover" $ {}
+                :background-color $ hsl 0 0 100 0.1
+              "\"&:active" $ {} (:transform "\"translate(1px, 0px)")
+        |effect-highlight $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defeffect effect-highlight (root?) (action el at?)
+              if root? $ let
+                  *highlight $ atom nil
+                if (= action :mount)
+                  .!addEventListener el "\"mouseover" $ fn (event)
+                    let
+                        t $ .-target event
+                      when
+                        = "\"DIV" $ .-tagName t
+                        if
+                          and @*highlight $ not (identical? t @*highlight)
+                          -> @*highlight .-classList $ .!remove "\"on-hover"
+                        -> t .-classList $ .!add "\"on-hover"
+                        reset! *highlight t
         |render-expr $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn render-expr (data) (comp-expr data false true false)
@@ -109,7 +146,7 @@
           ns calcit-theme.comp.expr $ :require
             respo-ui.core :refer $ hsl
             respo-ui.core :as ui
-            respo.core :refer $ defcomp list-> <> div button textarea span
+            respo.core :refer $ defcomp list-> <> div button textarea span defeffect
             respo.css :refer $ defstyle
             respo.comp.space :refer $ =<
             calcit-theme.config :refer $ dev?
@@ -145,16 +182,15 @@
               let
                   raw $ js/localStorage.getItem (:storage-key config/site)
                 when (some? raw)
-                  dispatch! $ :: :hydrate-storage
-                    extract-cirru-edn $ js/JSON.parse raw
+                  dispatch! $ :: :hydrate-storage (parse-cirru-edn raw)
               println "|App started."
         |mount-target $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def mount-target $ .querySelector js/document |.app
+            def mount-target $ js/document.querySelector |.app
         |persist-storage! $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn persist-storage! () $ .setItem js/localStorage (:storage-key config/site)
-              js/JSON.stringify $ to-cirru-edn (:store @*reel)
+            defn persist-storage! () $ js/localStorage.setItem (:storage-key config/site)
+              format-cirru-edn $ :store @*reel
         |reload! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn reload! () $ if (nil? build-errors)
@@ -236,14 +272,16 @@
                 < (count expr) 6
         |style-expr $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def style-expr $ {} (:display :block) (:border-radius "\"8px") (:color :white) (:vertical-align :top) (:padding "\"4px 4px 0px 8px") (:margin-left 8) (:margin-bottom 4) (:transition-duration "\"240ms") (:border-width "\"0 0 0 1px") (:border-style :solid)
+            def style-expr $ {} (:display :block) (:border-radius "\"8px") (:color :white) (:vertical-align :top) (:padding "\"4px 4px 0px 8px") (:margin-left 8) (:margin-bottom 4) (:transition-duration "\"240ms") (:transition-property "\"border-color") (:border-width "\"0 0 0 1px") (:border-style :solid)
               :border-color $ hsl 0 0 100 0.3
               :min-height 24
               :min-width 8
+              :user-select :none
         |style-leaf $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-leaf $ {} (:display :inline-block) (:vertical-align :top) (:font-family ui/font-code) (:margin "\"0 4px") (:padding "\"0 4px")
               :color $ hsl 200 14 60
+              :border-radius "\"4px"
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns calcit-theme.theme $ :require ( respo-ui.core :as ui)
