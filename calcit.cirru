@@ -1,7 +1,7 @@
 
 {} (:about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `cr query` to inspect and `cr edit`/`cr tree` to modify. Run `cr docs agents --full` first. Manual edits must follow format and schema conventions, then run `cr edit format`.") (:package |calcit-theme) (:version |0.4.2)
   :entries $ {}
-    :default $ {} (:description |) (:init-fn 'calcit-theme.main/main!) (:mode :native) (:reload-fn 'calcit-theme.main/reload!)
+    :default $ {} (:description |) (:init-fn 'calcit-theme.main/main!) (:mode :js) (:reload-fn 'calcit-theme.main/reload!)
       :modules $ [] |memof/ |lilac/ |respo.calcit/ |respo-ui.calcit/ |reel.calcit/
       :type-slots $ {}
   :files $ {}
