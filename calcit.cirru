@@ -26,12 +26,14 @@
               |$0 $ merge ui/global ui/fullscreen
                 {} $ :background-color :black
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'String
         |slurp $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defmacro slurp (file) (read-file file)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Macro
+            {} (:return 'String)
+              :args $ [] 'String
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote
           ns calcit-theme.comp.container $ :require
@@ -114,7 +116,9 @@
                             inc idx
                             , layout-kind
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn
+            {} (:return 'respo.schema/Component)
+              :args $ [] 'Dynamic 'Bool 'Bool 'Bool
         |comp-leaf $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defcomp comp-leaf (x head?)
@@ -124,7 +128,9 @@
                   :style $ theme/decorate-leaf x head?
                 <> x
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn
+            {} (:return 'respo.schema/Component)
+              :args $ [] 'String 'Bool
         |css-expr $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defstyle css-expr $ {} (|& theme/style-expr)
@@ -132,7 +138,7 @@
                 :border-color $ hsl 0 0 100 0.7
               |&.on-active $ {} (:transform "|translate(1px,0px)")
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'String
         |css-leaf $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defstyle css-leaf $ {} (|& theme/style-leaf)
@@ -141,7 +147,7 @@
                 :background-color $ hsl 0 0 100 0.1
               |&:active $ {} (:transform "|translate(1px, 0px)")
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'String
         |effect-highlight $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defeffect effect-highlight (root?) (action el at?)
@@ -163,12 +169,16 @@
                           .!add |on-hover
                         reset! *highlight t
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn
+            {} (:return 'respo.schema/Effect)
+              :args $ [] 'Bool
         |render-expr $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn render-expr (data) (comp-expr data false true false)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn
+            {} (:return 'respo.schema/Component)
+              :args $ [] 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote
           ns calcit-theme.comp.expr $ :require
@@ -185,12 +195,12 @@
             def dev? $ = |dev
               option:unwrap-or (get-env |mode) |release
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Bool
         |site $ %{} 'CodeEntry (:doc |)
           :code $ quote
             def site $ {} (:title "|Calcit Theme") (:icon |http://cdn.tiye.me/logo/cirru.png) (:storage-key |calcit-theme)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Map 'Tag 'String
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote (ns calcit-theme.config)
     |calcit-theme.main $ %{} 'FileEntry
@@ -205,7 +215,9 @@
             defn dispatch! (op) (; println |Dispatch: op)
               reset! *reel $ reel-updater updater @*reel op
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn
+            {} (:return 'Unit)
+              :args $ [] 'calcit-theme.schema/Op
         |main! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn main! ()
@@ -222,7 +234,9 @@
                     parse-cirru-edn $ unsafe-coerce raw 'String
               println "|App started."
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn
+            {} (:return 'Unit)
+              :args $ []
         |mount-target $ %{} 'CodeEntry (:doc |)
           :code $ quote
             def mount-target $ js/document.querySelector |.app
@@ -230,10 +244,14 @@
           :schema $ :: 'Dynamic
         |persist-storage! $ %{} 'CodeEntry (:doc |)
           :code $ quote
-            defn persist-storage! () $ js/localStorage.setItem (reel-schema/read-field config/site :storage-key)
-              format-cirru-edn $ reel-schema/read-field @*reel :store
+            defn persist-storage! () $ do
+              js/localStorage.setItem (reel-schema/read-field config/site :storage-key)
+                format-cirru-edn $ reel-schema/read-field @*reel :store
+              , nil
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn
+            {} (:return 'Unit)
+              :args $ []
         |reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn reload! () $ if (nil? build-errors)
@@ -244,21 +262,29 @@
                 hud! |ok~ |Ok
               hud! |error build-errors
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn
+            {} (:return 'Unit)
+              :args $ []
         |render-app! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn render-app! (renderer)
               renderer mount-target (comp-container @*reel) dispatch!
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn
+            {} (:return 'Unit)
+              :args $ [] 'Dynamic
         |repeat! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn repeat! (duration cb)
-              js/setTimeout
-                fn () (cb) (repeat! duration cb)
-                * duration 1000
+              do
+                js/setTimeout
+                  fn () (cb) (repeat! duration cb)
+                  * duration 1000
+                , nil
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn
+            {} (:return 'Unit)
+              :args $ [] 'Number 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote
           ns calcit-theme.main $ :require
@@ -274,13 +300,23 @@
             |bottom-tip :default hud!
     |calcit-theme.schema $ %{} 'FileEntry
       :defs $ {}
+        |Op $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            defenum Op (:states 'Dynamic 'Dynamic) (:content 'Dynamic) (:hydrate-storage 'Dynamic)
+          :examples $ []
+          :schema $ :: 'Dynamic
+        |Store $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            defstruct Store (:states 'Map) (:content 'String)
+          :examples $ []
+          :schema $ :: 'Dynamic
         |store $ %{} 'CodeEntry (:doc |)
           :code $ quote
-            def store $ {}
+            def store $ %{} calcit-theme.schema/Store
               :states $ {}
               :content |
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'calcit-theme.schema/Store
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote (ns calcit-theme.schema)
     |calcit-theme.theme $ %{} 'FileEntry
@@ -329,7 +365,9 @@
               and (every? string? expr)
                 < (count expr) 6
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn
+            {} (:return 'Bool)
+              :args $ [] (:: 'List 'Tag)
         |style-expr $ %{} 'CodeEntry (:doc |)
           :code $ quote
             def style-expr $ {} (:display :block) (:border-radius |8px) (:color :white) (:vertical-align :top) (:padding "|4px 4px 0px 8px") (:margin-left 8) (:margin-bottom 4) (:transition-duration |240ms) (:transition-property |border-color) (:border-width "|0 0 0 1px") (:border-style :solid)
@@ -338,14 +376,14 @@
               :min-width 8
               :user-select :none
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'String
         |style-leaf $ %{} 'CodeEntry (:doc |)
           :code $ quote
             def style-leaf $ {} (:display :inline-block) (:vertical-align :top) (:font-family ui/font-code) (:margin "|0 4px") (:padding "|0 4px")
               :color $ hsl 200 14 60
               :border-radius |4px
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'String
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote
           ns calcit-theme.theme $ :require (respo-ui.core :as ui)
@@ -361,7 +399,9 @@
                 (:hydrate-storage d) d
                 _ $ do (eprintln "|unknown op:" op) store
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn
+            {} (:return 'calcit-theme.schema/Store)
+              :args $ [] 'calcit-theme.schema/Store 'calcit-theme.schema/Op 'String 'Number
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote
           ns calcit-theme.updater $ :require
