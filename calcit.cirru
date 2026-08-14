@@ -305,18 +305,18 @@
             defenum Op (:states 'Dynamic 'Dynamic) (:content 'Dynamic) (:hydrate-storage 'Dynamic)
           :examples $ []
           :schema $ :: 'Dynamic
-        |Store $ %{} 'CodeEntry (:doc |)
+        |StoreData $ %{} 'CodeEntry (:doc |)
           :code $ quote
-            defstruct Store (:states 'Map) (:content 'String)
+            defstruct StoreData (:states 'Map) (:content 'String)
           :examples $ []
           :schema $ :: 'Dynamic
         |store $ %{} 'CodeEntry (:doc |)
           :code $ quote
-            def store $ %{} calcit-theme.schema/Store
+            def store $ %{} calcit-theme.schema/StoreData
               :states $ {}
               :content |
           :examples $ []
-          :schema $ :: 'calcit-theme.schema/Store
+          :schema $ :: 'calcit-theme.schema/StoreData
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote (ns calcit-theme.schema)
     |calcit-theme.theme $ %{} 'FileEntry
@@ -400,8 +400,8 @@
                 _ $ do (eprintln "|unknown op:" op) store
           :examples $ []
           :schema $ :: 'Fn
-            {} (:return 'calcit-theme.schema/Store)
-              :args $ [] 'calcit-theme.schema/Store 'calcit-theme.schema/Op 'String 'Number
+            {} (:return 'calcit-theme.schema/StoreData)
+              :args $ [] 'calcit-theme.schema/StoreData 'calcit-theme.schema/Op 'String 'Number
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote
           ns calcit-theme.updater $ :require
