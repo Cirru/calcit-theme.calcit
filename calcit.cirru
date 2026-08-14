@@ -305,18 +305,13 @@
             defenum Op (:states 'Dynamic 'Dynamic) (:content 'Dynamic) (:hydrate-storage 'Dynamic)
           :examples $ []
           :schema $ :: 'Dynamic
-        |StoreData $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstruct StoreData (:states 'Map) (:content 'String)
-          :examples $ []
-          :schema $ :: 'Dynamic
         |store $ %{} 'CodeEntry (:doc |)
           :code $ quote
-            def store $ %{} calcit-theme.schema/StoreData
+            def store $ %{} calcit-theme.types/StoreData
               :states $ {}
               :content |
           :examples $ []
-          :schema $ :: 'calcit-theme.schema/StoreData
+          :schema $ :: 'calcit-theme.types/StoreData
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote (ns calcit-theme.schema)
     |calcit-theme.theme $ %{} 'FileEntry
@@ -388,6 +383,15 @@
         :code $ quote
           ns calcit-theme.theme $ :require (respo-ui.core :as ui)
             respo.util.format :refer $ [] hsl
+    |calcit-theme.types $ %{} 'FileEntry
+      :defs $ {}
+        |StoreData $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            defstruct StoreData (:states 'Map) (:content 'String)
+          :examples $ []
+          :schema $ :: 'Dynamic
+      :ns $ %{} 'NsEntry (:doc |)
+        :code $ quote (ns calcit-theme.types)
     |calcit-theme.updater $ %{} 'FileEntry
       :defs $ {}
         |updater $ %{} 'CodeEntry (:doc |)
@@ -400,8 +404,8 @@
                 _ $ do (eprintln "|unknown op:" op) store
           :examples $ []
           :schema $ :: 'Fn
-            {} (:return 'calcit-theme.schema/StoreData)
-              :args $ [] 'calcit-theme.schema/StoreData 'calcit-theme.schema/Op 'String 'Number
+            {} (:return 'calcit-theme.types/StoreData)
+              :args $ [] 'calcit-theme.types/StoreData 'calcit-theme.schema/Op 'String 'Number
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote
           ns calcit-theme.updater $ :require
