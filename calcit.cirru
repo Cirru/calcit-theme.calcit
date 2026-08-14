@@ -11,8 +11,8 @@
           :code $ quote
             defcomp comp-container (reel)
               let
-                  store $ reel.schema/read-field reel :store
-                  states $ reel.schema/read-field store :states
+                  store $ reel-schema/read-field reel :store
+                  states $ reel-schema/read-field store :states
                   data $ parse-cirru-list (slurp |examples/demo.cirru)
                 div
                   {} $ :class-name css-body
@@ -99,7 +99,7 @@
                             simple? $ every? cursor string?
                             layout-kind $ if simple?
                               case-default prev-kind
-                                prev-kind $ raise "|Unpected case"
+                                prev-kind $ raise "|Unexpected case"
                                 nil $ if (> size 6) :expr :inline-expr
                                 :leaf $ if (> size 6) :expr :inline-expr
                                 :inline-expr $ if (> size 2) :expr :inline-expr
@@ -173,7 +173,6 @@
         :code $ quote
           ns calcit-theme.comp.expr $ :require
             respo-ui.core :refer $ hsl
-            respo-ui.core :as ui
             respo.core :refer $ defcomp list-> <> div button textarea span defeffect
             respo.css :refer $ defstyle
             respo.comp.space :refer $ =<
