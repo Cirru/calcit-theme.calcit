@@ -19,7 +19,9 @@
                   render-expr data
                   when dev? $ comp-reel (>> states :reel) reel ({})
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn
+            {} (:return 'respo.schema/Component)
+              :args $ [] 'Dynamic
         |css-body $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defstyle css-body $ {}
@@ -241,7 +243,7 @@
           :code $ quote
             def mount-target $ js/document.querySelector |.app
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'String
         |persist-storage! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn persist-storage! () $ do
@@ -325,7 +327,9 @@
                 inline? $ {} (:display :inline-block) (:border-width "|0 0 1px 0px") (:padding "|2px 4px") (:margin-bottom 0)
                 true $ {}
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn
+            {} (:return 'Dynamic)
+              :args $ [] 'Bool 'Bool 'Bool
         |decorate-leaf $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn decorate-leaf (text leading?)
