@@ -307,7 +307,7 @@
           :code $ quote
             defenum Op (:states 'Dynamic 'Dynamic) (:content 'Dynamic) (:hydrate-storage 'Dynamic)
           :examples $ []
-          :schema $ :: 'EnumDef
+          :schema $ :: 'Enum
         |store $ %{} 'CodeEntry (:doc |)
           :code $ quote
             def store $ %{} calcit-theme.types/StoreData
@@ -394,7 +394,7 @@
           :code $ quote
             defstruct StoreData (:states 'Map) (:content 'String)
           :examples $ []
-          :schema $ :: 'StructDef
+          :schema $ :: 'Enum
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote (ns calcit-theme.types)
     |calcit-theme.updater $ %{} 'FileEntry
