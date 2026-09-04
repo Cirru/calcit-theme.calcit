@@ -6,9 +6,9 @@
       :modules $ [] |memof/ |lilac/ |respo.calcit/ |respo-ui.calcit/ |reel.calcit/
       :type-slots $ {}
   :files $ {}
-    |calcit-theme.comp.container $ %{} 'FileEntry
+    'calcit-theme.comp.container $ %{} 'FileEntry
       :defs $ {}
-        |comp-container $ %{} 'CodeEntry (:doc |)
+        'comp-container $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defcomp comp-container (reel)
               let
@@ -23,20 +23,23 @@
           :schema $ :: 'Fn
             {} (:return 'respo.schema/Component)
               :args $ [] 'Dynamic
-        |css-body $ %{} 'CodeEntry (:doc |)
+        'css-body $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defstyle css-body $ {}
               |$0 $ merge ui/global ui/fullscreen
                 {} $ :background-color :black
           :examples $ []
           :schema $ :: 'String
-        |slurp $ %{} 'CodeEntry (:doc |)
+        'slurp $ %{} 'CodeEntry (:doc |)
           :code $ quote
-            defmacro slurp (file) (read-file file)
+            defmacro slurp (file)
+              read-file $ str file
           :examples $ []
           :schema $ :: 'Macro
-            {} (:return 'String)
-              :args $ [] 'String
+            {}
+              :capabilities $ #{} :fs-read
+              :expansion $ :: 'Expr 'String
+              :required $ [] (:: 'Expr 'String)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote
           ns calcit-theme.comp.container $ :require
@@ -49,9 +52,9 @@
             reel.schema :as reel-schema
             calcit-theme.config :refer $ dev?
             calcit-theme.comp.expr :refer $ comp-expr render-expr
-    |calcit-theme.comp.expr $ %{} 'FileEntry
+    'calcit-theme.comp.expr $ %{} 'FileEntry
       :defs $ {}
-        |comp-expr $ %{} 'CodeEntry (:doc |)
+        'comp-expr $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defcomp comp-expr (expr tailing? root? inline?)
               assert "|expr in list" $ list? expr
@@ -63,20 +66,24 @@
                       let
                           event $ option:unwrap (get e :event)
                           target $ unsafe-coerce (.-target event) 'JsObject
-                        if
-                          identical? target $ .-currentTarget event
-                          ->
-                            unsafe-coerce (.-classList target) 'JsObject
-                            .!add |on-active
+                        do
+                          if
+                            identical? target $ .-currentTarget event
+                            ->
+                              unsafe-coerce (.-classList target) 'JsObject
+                              .!add |on-active
+                          , &unit
                     :on-mouseup $ fn (e d!)
                       let
                           event $ option:unwrap (get e :event)
                           target $ unsafe-coerce (.-target event) 'JsObject
-                        if
-                          identical? target $ .-currentTarget event
-                          ->
-                            unsafe-coerce (.-classList target) 'JsObject
-                            .!remove |on-active
+                        do
+                          if
+                            identical? target $ .-currentTarget event
+                            ->
+                              unsafe-coerce (.-classList target) 'JsObject
+                              .!remove |on-active
+                          , &unit
                   apply-args
                       []
                       , expr 0 nil
@@ -87,7 +94,9 @@
                         (string? (option:unwrap-or (first xs) nil))
                           recur
                             conj acc $ [] idx
-                              comp-leaf (first xs) (&= 0 idx)
+                              comp-leaf
+                                option:unwrap-or (first xs) |
+                                &= 0 idx
                             rest xs
                             inc idx
                             , :leaf
@@ -122,7 +131,7 @@
           :schema $ :: 'Fn
             {} (:return 'respo.schema/Component)
               :args $ [] 'Dynamic 'Bool 'Bool 'Bool
-        |comp-leaf $ %{} 'CodeEntry (:doc |)
+        'comp-leaf $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defcomp comp-leaf (x head?)
               assert "|string for leaf" $ string? x
@@ -134,7 +143,7 @@
           :schema $ :: 'Fn
             {} (:return 'respo.schema/Component)
               :args $ [] 'String 'Bool
-        |css-expr $ %{} 'CodeEntry (:doc |)
+        'css-expr $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defstyle css-expr $ {} (|& theme/style-expr)
               |&.on-hover $ {}
@@ -142,7 +151,7 @@
               |&.on-active $ {} (:transform "|translate(1px,0px)")
           :examples $ []
           :schema $ :: 'String
-        |css-leaf $ %{} 'CodeEntry (:doc |)
+        'css-leaf $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defstyle css-leaf $ {} (|& theme/style-leaf)
               |& $ {} (:user-select :text)
@@ -151,7 +160,7 @@
               |&:active $ {} (:transform "|translate(1px, 0px)")
           :examples $ []
           :schema $ :: 'String
-        |effect-highlight $ %{} 'CodeEntry (:doc |)
+        'effect-highlight $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defeffect effect-highlight (root?) (action el at?)
               if root? $ let
@@ -160,22 +169,24 @@
                   .!addEventListener el |mouseover $ fn (event)
                     let
                         t $ unsafe-coerce (.-target event) 'JsObject
-                      when
-                        = |DIV $ unsafe-coerce (.-tagName t) 'String
-                        if
-                          and @*highlight $ not (identical? t @*highlight)
+                      do
+                        when
+                          = |DIV $ unsafe-coerce (.-tagName t) 'String
+                          if
+                            and @*highlight $ not (identical? t @*highlight)
+                            ->
+                              unsafe-coerce (.-classList @*highlight) 'JsObject
+                              .!remove |on-hover
                           ->
-                            unsafe-coerce (.-classList @*highlight) 'JsObject
-                            .!remove |on-hover
-                        ->
-                          unsafe-coerce (.-classList t) 'JsObject
-                          .!add |on-hover
-                        reset! *highlight t
+                            unsafe-coerce (.-classList t) 'JsObject
+                            .!add |on-hover
+                          reset! *highlight t
+                        , &unit
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'respo.schema/Effect)
               :args $ [] 'Bool
-        |render-expr $ %{} 'CodeEntry (:doc |)
+        'render-expr $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn render-expr (data) (comp-expr data false true false)
           :examples $ []
@@ -191,29 +202,29 @@
             respo.comp.space :refer $ =<
             calcit-theme.config :refer $ dev?
             calcit-theme.theme :as theme
-    |calcit-theme.config $ %{} 'FileEntry
+    'calcit-theme.config $ %{} 'FileEntry
       :defs $ {}
-        |dev? $ %{} 'CodeEntry (:doc |)
+        'dev? $ %{} 'CodeEntry (:doc |)
           :code $ quote
             def dev? $ = |dev
               option:unwrap-or (get-env |mode) |release
           :examples $ []
           :schema $ :: 'Bool
-        |site $ %{} 'CodeEntry (:doc |)
+        'site $ %{} 'CodeEntry (:doc |)
           :code $ quote
             def site $ {} (:title "|Calcit Theme") (:icon |http://cdn.tiye.me/logo/cirru.png) (:storage-key |calcit-theme)
           :examples $ []
           :schema $ :: 'Map 'Tag 'String
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote (ns calcit-theme.config)
-    |calcit-theme.main $ %{} 'FileEntry
+    'calcit-theme.main $ %{} 'FileEntry
       :defs $ {}
-        |*reel $ %{} 'CodeEntry (:doc |)
+        '*reel $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defatom *reel $ -> reel-schema/reel (assoc :base schema/store) (assoc :store schema/store)
           :examples $ []
           :schema $ :: 'Dynamic
-        |dispatch! $ %{} 'CodeEntry (:doc |)
+        'dispatch! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn dispatch! (op) (; println |Dispatch: op)
               reset! *reel $ reel-updater updater @*reel op
@@ -221,7 +232,7 @@
           :schema $ :: 'Fn
             {} (:return 'Unit)
               :args $ [] 'calcit-theme.schema/Op
-        |main! $ %{} 'CodeEntry (:doc |)
+        'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn main! ()
               println "|Running mode:" $ if config/dev? |dev |release
@@ -240,22 +251,22 @@
           :schema $ :: 'Fn
             {} (:return 'Unit)
               :args $ []
-        |mount-target $ %{} 'CodeEntry (:doc |)
+        'mount-target $ %{} 'CodeEntry (:doc |)
           :code $ quote
             def mount-target $ js/document.querySelector |.app
           :examples $ []
           :schema $ :: 'String
-        |persist-storage! $ %{} 'CodeEntry (:doc |)
+        'persist-storage! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn persist-storage! () $ do
               js/localStorage.setItem (reel-schema/read-field config/site :storage-key)
                 format-cirru-edn $ reel-schema/read-field @*reel :store
-              , nil
+              , &unit
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
               :args $ []
-        |reload! $ %{} 'CodeEntry (:doc |)
+        'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn reload! () $ if (nil? build-errors)
               do (clear-cache!) (remove-watch *reel :changes)
@@ -268,7 +279,7 @@
           :schema $ :: 'Fn
             {} (:return 'Unit)
               :args $ []
-        |render-app! $ %{} 'CodeEntry (:doc |)
+        'render-app! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn render-app! (renderer)
               renderer mount-target (comp-container @*reel) dispatch!
@@ -276,14 +287,14 @@
           :schema $ :: 'Fn
             {} (:return 'Unit)
               :args $ [] 'Dynamic
-        |repeat! $ %{} 'CodeEntry (:doc |)
+        'repeat! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn repeat! (duration cb)
               do
                 js/setTimeout
                   fn () (cb) (repeat! duration cb)
                   * duration 1000
-                , nil
+                , &unit
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
@@ -301,14 +312,14 @@
             calcit-theme.config :as config
             |./calcit.build-errors :default build-errors
             |bottom-tip :default hud!
-    |calcit-theme.schema $ %{} 'FileEntry
+    'calcit-theme.schema $ %{} 'FileEntry
       :defs $ {}
-        |Op $ %{} 'CodeEntry (:doc |)
+        'Op $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defenum Op (:states 'Dynamic 'Dynamic) (:content 'Dynamic) (:hydrate-storage 'Dynamic)
           :examples $ []
           :schema $ :: 'Enum
-        |store $ %{} 'CodeEntry (:doc |)
+        'store $ %{} 'CodeEntry (:doc |)
           :code $ quote
             def store $ %{} calcit-theme.types/StoreData
               :states $ {}
@@ -317,9 +328,9 @@
           :schema $ :: 'calcit-theme.types/StoreData
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote (ns calcit-theme.schema)
-    |calcit-theme.theme $ %{} 'FileEntry
+    'calcit-theme.theme $ %{} 'FileEntry
       :defs $ {}
-        |decorate-expr $ %{} 'CodeEntry (:doc |)
+        'decorate-expr $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn decorate-expr (tailing? inline? root?)
               cond
@@ -331,7 +342,7 @@
           :schema $ :: 'Fn
             {} (:return 'Dynamic)
               :args $ [] 'Bool 'Bool 'Bool
-        |decorate-leaf $ %{} 'CodeEntry (:doc |)
+        'decorate-leaf $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn decorate-leaf (text leading?)
               cond
@@ -359,7 +370,7 @@
             {} (:return 'Dynamic)
               :args $ [] 'String 'Bool
               :features $ #{} :js-ffi
-        |expr-simple? $ %{} 'CodeEntry (:doc |)
+        'expr-simple? $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn expr-simple? (expr)
               and (every? string? expr)
@@ -368,7 +379,7 @@
           :schema $ :: 'Fn
             {} (:return 'Bool)
               :args $ [] (:: 'List 'Tag)
-        |style-expr $ %{} 'CodeEntry (:doc |)
+        'style-expr $ %{} 'CodeEntry (:doc |)
           :code $ quote
             def style-expr $ {} (:display :block) (:border-radius |8px) (:color :white) (:vertical-align :top) (:padding "|4px 4px 0px 8px") (:margin-left 8) (:margin-bottom 4) (:transition-duration |240ms) (:transition-property |border-color) (:border-width "|0 0 0 1px") (:border-style :solid)
               :border-color $ hsl 0 0 100 0.3
@@ -377,7 +388,7 @@
               :user-select :none
           :examples $ []
           :schema $ :: 'String
-        |style-leaf $ %{} 'CodeEntry (:doc |)
+        'style-leaf $ %{} 'CodeEntry (:doc |)
           :code $ quote
             def style-leaf $ {} (:display :inline-block) (:vertical-align :top) (:font-family ui/font-code) (:margin "|0 4px") (:padding "|0 4px")
               :color $ hsl 200 14 60
@@ -388,22 +399,23 @@
         :code $ quote
           ns calcit-theme.theme $ :require (respo-ui.core :as ui)
             respo.util.format :refer $ [] hsl
-    |calcit-theme.types $ %{} 'FileEntry
+    'calcit-theme.types $ %{} 'FileEntry
       :defs $ {}
-        |StoreData $ %{} 'CodeEntry (:doc |)
+        'StoreData $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defstruct StoreData (:states 'Map) (:content 'String)
           :examples $ []
           :schema $ :: 'Enum
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote (ns calcit-theme.types)
-    |calcit-theme.updater $ %{} 'FileEntry
+    'calcit-theme.updater $ %{} 'FileEntry
       :defs $ {}
-        |updater $ %{} 'CodeEntry (:doc |)
+        'updater $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn updater (store op op-id op-time)
-              tag-match op
-                (:states cursor s) (update-states store cursor s)
+              match op
+                (:states cursor s)
+                  assoc store :states $ update-state-tree (:states store) cursor s
                 (:content c) (assoc store :content c)
                 (:hydrate-storage d) d
                 _ $ do (eprintln "|unknown op:" op) store
@@ -414,4 +426,4 @@
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote
           ns calcit-theme.updater $ :require
-            respo.cursor :refer $ update-states
+            respo.cursor :refer $ update-state-tree
