@@ -3,10 +3,7 @@
   :about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `calcit query` to inspect and `calcit edit`/`calcit tree` to modify. Run `calcit docs agents --contract` before mutations; use `--full` for first orientation or changed contract digest. Manual edits must follow format and schema conventions, then run `calcit edit format`."
   :package |calcit-theme
   :entries $ {} $ :default
-    {} (:description |)
-      :init-fn 'calcit-theme.main/main!
-      :mode :js
-      :reload-fn 'calcit-theme.main/reload!
+    {} (:description |) (:init-fn 'calcit-theme.main/main!) (:mode :js) (:reload-fn 'calcit-theme.main/reload!)
       :feature-policy $ {}
       :modules $ [] |memof/ |lilac/ |respo.calcit/ |respo-ui.calcit/ |reel.calcit/
       :type-slots $ {}
@@ -24,8 +21,7 @@
                 render-expr data
                 when dev? $ comp-reel (>> states :reel) reel $ {}
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :return 'respo.schema/Component
+          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
             :args $ [] 'Dynamic
         'css-body $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle css-body
@@ -55,6 +51,35 @@
             calcit-theme.comp.expr :refer $ comp-expr render-expr
     'calcit-theme.comp.expr $ %{} 'FileEntry
       :defs $ {}
+        'DomTokenListHost $ %{} 'CodeEntry
+          :doc "|DOMTokenList operations used by the hover highlighter."
+          :code $ quote $ deftrait DomTokenListHost
+            .add! $ :: 'Fn $ {} (:return 'Unit)
+              :args $ [] 'calcit-theme.comp.expr/DomTokenListHost 'String
+            .remove! $ :: 'Fn $ {} (:return 'Unit)
+              :args $ [] 'calcit-theme.comp.expr/DomTokenListHost 'String
+          :examples $ []
+          :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
+            :names $ {} (:add! |add) (:remove! |remove)
+          :schema $ :: 'Trait
+        'HighlightElementHost $ %{} 'CodeEntry
+          :doc "|DOM element surface used by the hover highlighter."
+          :code $ quote $ deftrait HighlightElementHost (:tag-name 'String) (:class-list 'calcit-theme.comp.expr/DomTokenListHost)
+            .add-event-listener! $ :: 'Fn $ {} (:return 'Unit)
+              :args $ [] 'calcit-theme.comp.expr/HighlightElementHost 'String $ :: 'Fn
+                {} (:return 'Unit)
+                  :args $ [] 'calcit-theme.comp.expr/HighlightEventHost
+          :examples $ []
+          :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
+            :names $ {} (:add-event-listener! |addEventListener) (:class-list |classList) (:tag-name |tagName)
+          :schema $ :: 'Trait
+        'HighlightEventHost $ %{} 'CodeEntry
+          :doc "|Mouse event surface used by the hover highlighter."
+          :code $ quote $ deftrait HighlightEventHost (:target 'calcit-theme.comp.expr/HighlightElementHost) (:current-target 'calcit-theme.comp.expr/HighlightElementHost)
+          :examples $ []
+          :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
+            :names $ {} $ :current-target |currentTarget
+          :schema $ :: 'Trait
         'comp-expr $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-expr (expr tailing? root? inline?)
             assert "|expr in list" $ list? expr
@@ -64,30 +89,33 @@
                   :style $ theme/decorate-expr tailing? inline? root?
                   :on-mousedown $ fn (e d!)
                     let
-                        event $ option:unwrap $ get e :event
-                        target $ unsafe-coerce (.-target event) 'JsObject
+                        event $ unsafe-coerce
+                          option:unwrap $ get e :event
+                          , HighlightEventHost
+                        target $ .-target event
                       do
                         if
-                          identical? target $ .-currentTarget event
-                          ->
-                            unsafe-coerce (.-classList target) 'JsObject
-                            .!add |on-active
+                          identical? target $ .-current-target event
+                          .add! (.-class-list target) |on-active
                         , &unit
                   :on-mouseup $ fn (e d!)
                     let
-                        event $ option:unwrap $ get e :event
-                        target $ unsafe-coerce (.-target event) 'JsObject
+                        event $ unsafe-coerce
+                          option:unwrap $ get e :event
+                          , HighlightEventHost
+                        target $ .-target event
                       do
                         if
-                          identical? target $ .-currentTarget event
-                          ->
-                            unsafe-coerce (.-classList target) 'JsObject
-                            .!remove |on-active
+                          identical? target $ .-current-target event
+                          .remove! (.-class-list target) |on-active
                         , &unit
                 apply-args
                     []
                     , expr 0 nil
                   fn (acc xs idx prev-kind)
+                    hint-fn $ {}
+                      :args $ [] (:: 'List 'Dynamic) (:: 'List 'Dynamic) 'Number 'Dynamic
+                      :return $ :: 'List 'Dynamic
                     cond
                         empty? xs
                         , acc
@@ -125,9 +153,9 @@
                           inc idx
                           , layout-kind
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :return 'respo.schema/Component
-            :args $ [] 'Dynamic 'Bool 'Bool 'Bool
+          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
+            :args $ [] (:: 'List 'Dynamic) 'Bool 'Bool 'Bool
+            :features $ #{} :js-ffi
         'comp-leaf $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-leaf (x head?)
             assert "|string for leaf" $ string? x
@@ -136,13 +164,13 @@
                 :style $ theme/decorate-leaf x head?
               <> x
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :return 'respo.schema/Component
+          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
             :args $ [] 'String 'Bool
         'css-expr $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle css-expr
             {} (|& theme/style-expr)
-              |&.on-hover $ {} $ :border-color (hsl 0 0 100 0.7)
+              |&.on-hover $ {} $ :border-color
+                hsl 0 0 100 $ %some 0.7
               |&.on-active $ {} $ :transform "|translate(1px,0px)"
           :examples $ []
           :schema $ :: 'String
@@ -150,41 +178,40 @@
           :code $ quote $ defstyle css-leaf
             {} (|& theme/style-leaf)
               |& $ {} $ :user-select :text
-              |&:hover $ {} $ :background-color (hsl 0 0 100 0.1)
+              |&:hover $ {} $ :background-color
+                hsl 0 0 100 $ %some 0.1
               |&:active $ {} $ :transform "|translate(1px, 0px)"
           :examples $ []
           :schema $ :: 'String
         'effect-highlight $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defeffect effect-highlight (root?) (action el at?)
             if root? $ let
-                *highlight $ atom nil
+                *highlight $ atom $ %none
               if (= action :mount)
-                .!addEventListener el |mouseover $ fn (event)
+                .add-event-listener! (unsafe-coerce el HighlightElementHost) |mouseover $ fn (event)
                   let
-                      t $ unsafe-coerce (.-target event) 'JsObject
+                      t $ unsafe-coerce (.-target event) HighlightElementHost
                     do
                       when
-                        = |DIV $ unsafe-coerce (.-tagName t) 'String
+                        = |DIV $ .-tag-name t
                         if
-                          and @*highlight $ not $ identical? t @*highlight
-                          ->
-                            unsafe-coerce (.-classList @*highlight) 'JsObject
-                            .!remove |on-hover
-                        ->
-                          unsafe-coerce (.-classList t) 'JsObject
-                          .!add |on-hover
-                        reset! *highlight t
+                          and (option:some? @*highlight)
+                            not $ identical? t $ option:unwrap @*highlight
+                          .remove!
+                            .-class-list $ option:unwrap @*highlight
+                            , |on-hover
+                        .add! (.-class-list t) |on-hover
+                        reset! *highlight $ %some t
                       , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :return 'respo.schema/Effect
+          :schema $ :: 'Fn $ {} (:return 'respo.schema/Effect)
             :args $ [] 'Bool
+            :features $ #{} :js-ffi
         'render-expr $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-expr (data) (comp-expr data false true false)
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :return 'respo.schema/Component
-            :args $ [] 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
+            :args $ [] $ :: 'List 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns calcit-theme.comp.expr
           :require
@@ -203,9 +230,7 @@
           :schema $ :: 'Bool
         'site $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def site
-            {} (:title "|Calcit Theme")
-              :icon |http://cdn.tiye.me/logo/cirru.png
-              :storage-key |calcit-theme
+            {} (:title "|Calcit Theme") (:icon |http://cdn.tiye.me/logo/cirru.png) (:storage-key |calcit-theme)
           :examples $ []
           :schema $ :: 'Map 'Tag 'String
       :ns $ %{} 'NsEntry (:doc |)
@@ -239,27 +264,31 @@
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ []
+            :features $ #{} :js-ffi
         'mount-target $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ def mount-target
-            js/document.querySelector |.app
+          :code $ quote $ defn mount-target ()
+            unsafe-coerce (js/document.querySelector |.app) (:: 'JsNullish 'calcit-theme.comp.expr/HighlightElementHost)
           :examples $ []
-          :schema $ :: 'String
+          :schema $ :: 'Fn $ {}
+            :args $ []
+            :features $ #{} :js-ffi
+            :return $ :: 'JsNullish 'calcit-theme.comp.expr/HighlightElementHost
         'persist-storage! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn persist-storage! ()
             do
-              js/localStorage.setItem
-                reel-schema/read-field config/site :storage-key
+              js/localStorage.setItem (reel-schema/read-field config/site :storage-key)
                 format-cirru-edn $ reel-schema/read-field @*reel :store
               , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ []
+            :features $ #{} :js-ffi
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! ()
             if (nil? build-errors)
               do (clear-cache!) (remove-watch *reel :changes)
                 add-watch *reel :changes $ fn (reel prev) (render-app! render!)
-                reset! *reel $ refresh-reel @*reel schema/store updater
+                reset! *reel $ assert-type (refresh-reel @*reel schema/store updater) (:: 'Map 'Tag 'Dynamic)
                 println "|Code updated."
                 hud! |ok~ |Ok
               hud! |error build-errors
@@ -268,7 +297,7 @@
             :args $ []
         'render-app! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-app! (renderer)
-            renderer mount-target (comp-container @*reel) dispatch!
+            renderer (mount-target) (comp-container @*reel) dispatch!
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'Dynamic
@@ -282,6 +311,7 @@
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'Number 'Dynamic
+            :features $ #{} :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns calcit-theme.main
           :require
@@ -356,11 +386,7 @@
             :args $ [] $ :: 'List 'Tag
         'style-expr $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def style-expr
-            {} (:display :block) (:border-radius |8px) (:color :white) (:vertical-align :top) (:padding "|4px 4px 0px 8px") (:margin-left 8) (:margin-bottom 4)
-              :transition-duration |240ms
-              :transition-property |border-color
-              :border-width "|0 0 0 1px"
-              :border-style :solid
+            {} (:display :block) (:border-radius |8px) (:color :white) (:vertical-align :top) (:padding "|4px 4px 0px 8px") (:margin-left 8) (:margin-bottom 4) (:transition-duration |240ms) (:transition-property |border-color) (:border-width "|0 0 0 1px") (:border-style :solid)
               :border-color $ hsl 0 0 100 0.3
               :min-height 24
               :min-width 8
@@ -397,8 +423,7 @@
               (:hydrate-storage d) d
               _ $ do (eprintln "|unknown op:" op) store
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :return 'calcit-theme.types/StoreData
+          :schema $ :: 'Fn $ {} (:return 'calcit-theme.types/StoreData)
             :args $ [] 'calcit-theme.types/StoreData 'calcit-theme.schema/Op 'String 'Number
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns calcit-theme.updater

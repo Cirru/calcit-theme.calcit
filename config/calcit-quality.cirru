@@ -13,20 +13,20 @@
       :codeNil 4
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 0
       :typeNone 0
       :typeNotFull 1
-      :unresolved 5
-      :unsafeCoerce 4
+      :unresolved 4
+      :unsafeCoerce 2
     |calcit-theme.comp.expr/effect-highlight $ {} (:codeDynamic 0)
-      :codeNil 1
+      :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
       :schemaDynamic 0
       :typeNone 0
       :typeNotFull 0
-      :unresolved 1
-      :unsafeCoerce 4
+      :unresolved 0
+      :unsafeCoerce 2
     |calcit-theme.comp.expr/render-expr $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -54,6 +54,15 @@
       :typeNotFull 0
       :unresolved 0
       :unsafeCoerce 1
+    |calcit-theme.main/mount-target $ {} (:codeDynamic 0)
+      :codeNil 0
+      :declaredOptional 0
+      :deprecatedCalls 0
+      :schemaDynamic 0
+      :typeNone 0
+      :typeNotFull 0
+      :unresolved 0
+      :unsafeCoerce 1
     |calcit-theme.main/render-app! $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -67,10 +76,10 @@
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 0
       :typeNone 0
       :typeNotFull 1
-      :unresolved 1
+      :unresolved 0
       :unsafeCoerce 0
     |calcit-theme.theme/decorate-expr $ {} (:codeDynamic 0)
       :codeNil 0
@@ -91,14 +100,14 @@
       :unresolved 0
       :unsafeCoerce 0
   :metrics $ {} (:codeDynamic 0)
-    :codeNil 5
+    :codeNil 4
     :declaredOptional 0
     :deprecatedCalls 0
-    :schemaDynamic 7
+    :schemaDynamic 5
     :typeNone 0
     :typeNotFull 8
-    :unresolved 12
-    :unsafeCoerce 9
+    :unresolved 9
+    :unsafeCoerce 6
   :scope $ {} (:includeDependencies false)
     :namespace nil
     :namespacePrefix nil
