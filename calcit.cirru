@@ -87,26 +87,8 @@
               list->
                 {} (:class-name css-expr)
                   :style $ theme/decorate-expr tailing? inline? root?
-                  :on-mousedown $ fn (e d!)
-                    let
-                        event $ unsafe-coerce
-                          option:unwrap $ get e :event
-                          , HighlightEventHost
-                        target $ .-target event
-                      if
-                        identical? target $ .-current-target event
-                        .add! (.-class-list target) |on-active
-                      , &unit
-                  :on-mouseup $ fn (e d!)
-                    let
-                        event $ unsafe-coerce
-                          option:unwrap $ get e :event
-                          , HighlightEventHost
-                        target $ .-target event
-                      if
-                        identical? target $ .-current-target event
-                        .remove! (.-class-list target) |on-active
-                      , &unit
+                  :on-mousedown $ fn (e d!) (handle-active-event! e true)
+                  :on-mouseup $ fn (e d!) (handle-active-event! e false)
                 apply-args
                     []
                     , expr 0 nil
@@ -186,23 +168,48 @@
             if root? $ let
                 *highlight $ atom $ %none
               if (= action :mount)
-                .add-event-listener! (unsafe-coerce el HighlightElementHost) |mouseover $ fn (event)
-                  let
-                      t $ unsafe-coerce (.-target event) HighlightElementHost
-                    when
-                      = |DIV $ .-tag-name t
-                      if
-                        and (option:some? @*highlight)
-                          not $ identical? t $ option:unwrap @*highlight
-                        .remove!
-                          .-class-list $ option:unwrap @*highlight
-                          , |on-hover
-                      .add! (.-class-list t) |on-hover
-                      reset! *highlight $ %some t
-                    , &unit
+                .add-event-listener! (unsafe-coerce el HighlightElementHost) |mouseover $ fn (event) (handle-hover! *highlight event)
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Effect)
             :args $ [] 'Bool
+            :features $ #{} :js-ffi
+        'handle-active-event! $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn handle-active-event! (e active?)
+            let
+                event $ unsafe-coerce
+                  option:unwrap $ get e :event
+                  , HighlightEventHost
+                target $ .-target event
+              if
+                identical? target $ .-current-target event
+                if active?
+                  .add! (.-class-list target) |on-active
+                  .remove! (.-class-list target) |on-active
+              , &unit
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ [] 'Dynamic 'Bool
+            :features $ #{} :js-ffi
+        'handle-hover! $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn handle-hover! (*highlight event)
+            let
+                t $ unsafe-coerce (.-target event) HighlightElementHost
+              when
+                = |DIV $ .-tag-name t
+                if
+                  and (option:some? @*highlight)
+                    not $ identical? t $ option:unwrap @*highlight
+                  .remove!
+                    .-class-list $ option:unwrap @*highlight
+                    , |on-hover
+                .add! (.-class-list t) |on-hover
+                reset! *highlight $ %some t
+              , &unit
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ []
+              :: 'Ref $ :: 'calcit.core/Option 'calcit-theme.comp.expr/HighlightElementHost
+              , 'calcit-theme.comp.expr/HighlightEventHost
             :features $ #{} :js-ffi
         'render-expr $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-expr (data) (comp-expr data false true false)
