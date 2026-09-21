@@ -39,7 +39,9 @@ jobs:
         caps verify --toolchain
         calcit calcit.cirru edit format
         git diff --exit-code -- calcit.cirru
+        calcit calcit.cirru fix --workflow strict --verify --format edn
         calcit calcit.cirru --check-only
+        calcit calcit.cirru analyze dynamic-methods --max 0
         calcit calcit.cirru analyze quality --baseline config/calcit-quality.cirru
 
     - name: "compiles to js"
@@ -48,6 +50,7 @@ jobs:
         && yarn install --immutable && yarn vite build --base=./
 
     - name: Install verified rsync
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       run: |
         set -euo pipefail
         curl --fail --location --silent --show-error \
