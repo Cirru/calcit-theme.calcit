@@ -18,15 +18,6 @@
       :typeNotFull 1
       :unresolved 4
       :unsafeCoerce 0
-    |calcit-theme.comp.expr/effect-highlight $ {} (:codeDynamic 0)
-      :codeNil 0
-      :declaredOptional 0
-      :deprecatedCalls 0
-      :schemaDynamic 0
-      :typeNone 0
-      :typeNotFull 0
-      :unresolved 0
-      :unsafeCoerce 1
     |calcit-theme.comp.expr/handle-active-event! $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -43,6 +34,15 @@
       :schemaDynamic 0
       :typeNone 0
       :typeNotFull 0
+      :unresolved 0
+      :unsafeCoerce 1
+    |calcit-theme.comp.expr/register-hover! $ {} (:codeDynamic 0)
+      :codeNil 0
+      :declaredOptional 0
+      :deprecatedCalls 0
+      :schemaDynamic 0
+      :typeNone 0
+      :typeNotFull 1
       :unresolved 0
       :unsafeCoerce 1
     |calcit-theme.comp.expr/render-expr $ {} (:codeDynamic 0)
@@ -123,7 +123,7 @@
     :deprecatedCalls 0
     :schemaDynamic 5
     :typeNone 0
-    :typeNotFull 9
+    :typeNotFull 10
     :unresolved 9
     :unsafeCoerce 5
   :scope $ {} (:includeDependencies false)

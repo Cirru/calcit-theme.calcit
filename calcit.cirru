@@ -167,8 +167,7 @@
           :code $ quote $ defeffect effect-highlight (root?) (action el at?)
             if root? $ let
                 *highlight $ atom $ %none
-              if (= action :mount)
-                .add-event-listener! (unsafe-coerce el HighlightElementHost) |mouseover $ fn (event) (handle-hover! *highlight event)
+              if (= action :mount) (register-hover! el *highlight)
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Effect)
             :args $ [] 'Bool
@@ -210,6 +209,13 @@
             :args $ []
               :: 'Ref $ :: 'calcit.core/Option 'calcit-theme.comp.expr/HighlightElementHost
               , 'calcit-theme.comp.expr/HighlightEventHost
+            :features $ #{} :js-ffi
+        'register-hover! $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn register-hover! (el *highlight)
+            .add-event-listener! (unsafe-coerce el HighlightElementHost) |mouseover $ fn (event) (handle-hover! *highlight event)
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ [] 'Dynamic $ :: 'Ref (:: 'calcit.core/Option 'calcit-theme.comp.expr/HighlightElementHost)
             :features $ #{} :js-ffi
         'render-expr $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-expr (data) (comp-expr data false true false)
