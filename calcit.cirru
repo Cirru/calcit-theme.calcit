@@ -5,7 +5,7 @@
   :entries $ {} $ :default
     {} (:description |) (:init-fn 'calcit-theme.main/main!) (:mode :js) (:reload-fn 'calcit-theme.main/reload!)
       :feature-policy $ {}
-      :modules $ [] |memof/ |lilac/ |respo.calcit/ |respo-ui.calcit/ |reel.calcit/
+      :modules $ [] |respo.calcit/ |respo-ui.calcit/ |reel.calcit/
       :type-slots $ {}
   :files $ {}
     'calcit-theme.comp.container $ %{} 'FileEntry
@@ -93,22 +93,20 @@
                           option:unwrap $ get e :event
                           , HighlightEventHost
                         target $ .-target event
-                      do
-                        if
-                          identical? target $ .-current-target event
-                          .add! (.-class-list target) |on-active
-                        , &unit
+                      if
+                        identical? target $ .-current-target event
+                        .add! (.-class-list target) |on-active
+                      , &unit
                   :on-mouseup $ fn (e d!)
                     let
                         event $ unsafe-coerce
                           option:unwrap $ get e :event
                           , HighlightEventHost
                         target $ .-target event
-                      do
-                        if
-                          identical? target $ .-current-target event
-                          .remove! (.-class-list target) |on-active
-                        , &unit
+                      if
+                        identical? target $ .-current-target event
+                        .remove! (.-class-list target) |on-active
+                      , &unit
                 apply-args
                     []
                     , expr 0 nil
@@ -191,18 +189,17 @@
                 .add-event-listener! (unsafe-coerce el HighlightElementHost) |mouseover $ fn (event)
                   let
                       t $ unsafe-coerce (.-target event) HighlightElementHost
-                    do
-                      when
-                        = |DIV $ .-tag-name t
-                        if
-                          and (option:some? @*highlight)
-                            not $ identical? t $ option:unwrap @*highlight
-                          .remove!
-                            .-class-list $ option:unwrap @*highlight
-                            , |on-hover
-                        .add! (.-class-list t) |on-hover
-                        reset! *highlight $ %some t
-                      , &unit
+                    when
+                      = |DIV $ .-tag-name t
+                      if
+                        and (option:some? @*highlight)
+                          not $ identical? t $ option:unwrap @*highlight
+                        .remove!
+                          .-class-list $ option:unwrap @*highlight
+                          , |on-hover
+                      .add! (.-class-list t) |on-hover
+                      reset! *highlight $ %some t
+                    , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Effect)
             :args $ [] 'Bool
@@ -275,10 +272,9 @@
             :return $ :: 'JsNullish 'calcit-theme.comp.expr/HighlightElementHost
         'persist-storage! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn persist-storage! ()
-            do
-              js/localStorage.setItem (reel-schema/read-field config/site :storage-key)
-                format-cirru-edn $ reel-schema/read-field @*reel :store
-              , &unit
+            js/localStorage.setItem (reel-schema/read-field config/site :storage-key)
+              format-cirru-edn $ reel-schema/read-field @*reel :store
+            , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ []
@@ -303,11 +299,10 @@
             :args $ [] 'Dynamic
         'repeat! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn repeat! (duration cb)
-            do
-              js/setTimeout
-                fn () (cb) (repeat! duration cb)
-                * duration 1000
-              , &unit
+            js/setTimeout
+              fn () (cb) (repeat! duration cb)
+              * duration 1000
+            , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'Number 'Dynamic
@@ -333,9 +328,7 @@
           :schema $ :: 'Enum
         'store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def store
-            %{} calcit-theme.types/StoreData
-              :states $ {}
-              :content |
+            calcit-theme.types/StoreData :states ({}) :content |
           :examples $ []
           :schema $ :: 'calcit-theme.types/StoreData
       :ns $ %{} 'NsEntry (:doc |)
@@ -379,7 +372,7 @@
             :features $ #{} :js-ffi
         'expr-simple? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn expr-simple? (expr)
-            and (every? string? expr)
+            and (every? expr string?)
               < (count expr) 6
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Bool)
