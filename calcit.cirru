@@ -3,7 +3,7 @@
   :about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `calcit query` to inspect and `calcit edit`/`calcit tree` to modify. Run `calcit docs agents --contract` before mutations; use `--full` for first orientation or changed contract digest. Manual edits must follow format and schema conventions, then run `calcit edit format`."
   :package |calcit-theme
   :entries $ {} $ :default
-    {} (:description |) (:init-fn 'calcit-theme.main/main!) (:mode :js) (:reload-fn 'calcit-theme.main/reload!)
+    {} (:description |) (:init-fn 'calcit-theme.main/main!) (:mode :js) (:reload-fn 'calcit-theme.main/reload!) (:target :browser)
       :feature-policy $ {}
       :modules $ [] |respo.calcit/ |respo-ui.calcit/ |reel.calcit/
       :type-slots $ {}
@@ -107,14 +107,16 @@
                           rest xs
                           inc idx
                           , :leaf
-                      (&let (cursor (first xs)) (and (= 1 (count cursor)) (string? (option:unwrap-or (first cursor) nil))))
+                      (&let (cursor (option:unwrap (first xs))) (and (= 1 (count cursor)) (string? (option:unwrap-or (first cursor) nil))))
                         recur
-                          conj acc $ [] idx $ comp-expr (first xs) false false true
+                          conj acc $ [] idx $ comp-expr
+                            option:unwrap $ first xs
+                            , false false true
                           rest xs
                           inc idx
                           , :leaf
                       true $ let
-                          cursor $ first xs
+                          cursor $ option:unwrap $ first xs
                           size $ count cursor
                           simple? $ every? cursor string?
                           layout-kind $ if simple?
@@ -261,42 +263,44 @@
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! ()
             println "|Running mode:" $ if config/dev? |dev |release
-            render-app! render!
-            add-watch *reel :changes $ fn (reel prev) (render-app! render!)
+            render-app!
+            add-watch *reel :changes $ fn (reel prev) (render-app!)
             listen-devtools! |a dispatch!
-            js/window.addEventListener |beforeunload $ fn (event) (persist-storage!)
+            browser/add-event-listener! |beforeunload $ fn (_event) (persist-storage!)
             repeat! 60 persist-storage!
             let
-                raw $ js/localStorage.getItem $ reel-schema/read-field config/site :storage-key
-              when (js-present? raw)
-                dispatch! $ :: :hydrate-storage $ parse-cirru-edn (unsafe-coerce raw 'String)
+                raw $ browser/storage-get $ option:unwrap (get config/site :storage-key)
+              when (option:some? raw)
+                dispatch! $ :: :hydrate-storage $ assert-type
+                  parse-cirru-edn $ option:unwrap raw
+                  , 'calcit-theme.types/StoreData
             println "|App started."
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ []
-            :features $ #{} :js-ffi
         'mount-target $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn mount-target ()
-            unsafe-coerce (js/document.querySelector |.app) (:: 'JsNullish 'calcit-theme.comp.expr/HighlightElementHost)
+            option:unwrap $ browser/query-selector |.app
           :examples $ []
-          :schema $ :: 'Fn $ {}
+          :schema $ :: 'Fn $ {} (:return 'js-ffi.browser/DomElementHost)
             :args $ []
-            :features $ #{} :js-ffi
-            :return $ :: 'JsNullish 'calcit-theme.comp.expr/HighlightElementHost
         'persist-storage! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn persist-storage! ()
-            js/localStorage.setItem (reel-schema/read-field config/site :storage-key)
-              format-cirru-edn $ reel-schema/read-field @*reel :store
-            , &unit
+            browser/storage-set!
+              option:unwrap $ get config/site :storage-key
+              format-cirru-edn $ assert-type
+                match (get @*reel :store)
+                  (:some data) data
+                  (:none) schema/store
+                , 'calcit-theme.types/StoreData
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ []
-            :features $ #{} :js-ffi
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! ()
             if (nil? build-errors)
               do (clear-cache!) (remove-watch *reel :changes)
-                add-watch *reel :changes $ fn (reel prev) (render-app! render!)
+                add-watch *reel :changes $ fn (reel prev) (render-app!)
                 reset! *reel $ assert-type (refresh-reel @*reel schema/store updater) (:: 'Map 'Tag 'Dynamic)
                 println "|Code updated."
                 hud! |ok~ |Ok
@@ -305,21 +309,22 @@
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ []
         'render-app! $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn render-app! (renderer)
-            renderer (mount-target) (comp-container @*reel) dispatch!
+          :code $ quote $ defn render-app! ()
+            render! (mount-target) (comp-container @*reel) dispatch!
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'Dynamic
+            :args $ []
         'repeat! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn repeat! (duration cb)
-            js/setTimeout
+            browser/set-timeout!
               fn () (cb) (repeat! duration cb)
               * duration 1000
             , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'Number 'Dynamic
-            :features $ #{} :js-ffi
+            :args $ [] 'Number $ :: 'Fn
+              {} (:return 'Unit)
+                :args $ []
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns calcit-theme.main
           :require
@@ -333,10 +338,11 @@
             calcit-theme.config :as config
             |./calcit.build-errors :default build-errors
             |bottom-tip :default hud!
+            js-ffi.browser :as browser
     'calcit-theme.schema $ %{} 'FileEntry
       :defs $ {}
         'Op $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defenum Op (:states 'Dynamic 'Dynamic) (:content 'Dynamic) (:hydrate-storage 'Dynamic)
+          :code $ quote $ defenum Op (:states 'Dynamic 'Dynamic) (:content 'String) (:hydrate-storage 'calcit-theme.types/StoreData)
           :examples $ []
           :schema $ :: 'Enum
         'store $ %{} 'CodeEntry (:doc |)
@@ -375,14 +381,14 @@
                 {} $ :color $ hsl 250 50 60
               (= text |nil)
                 {} $ :color $ hsl 310 60 40
-              (.!match text (new js/RegExp |^-?\d))
+              (number-prefix? text)
                 {} $ :color $ hsl 300 70 40
               leading? $ {} $ :color (hsl 40 85 60)
               true $ {}
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+          :schema $ :: 'Fn $ {}
             :args $ [] 'String 'Bool
-            :features $ #{} :js-ffi
+            :return $ :: 'Map 'Tag 'String
         'expr-simple? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn expr-simple? (expr)
             and (every? expr string?)
@@ -390,6 +396,26 @@
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Bool)
             :args $ [] $ :: 'List 'Tag
+        'number-prefix? $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn number-prefix? (text)
+            let
+                first-char $ option:unwrap-or (get text 0) |
+                digit $ if (= first-char |-)
+                  option:unwrap-or (get text 1) |
+                  , first-char
+              and (not= digit |)
+                option:some? $ str-find-index |0123456789 digit
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Bool)
+            :args $ [] 'String
+          :tests $ [] $ %{} 'TestEntry (:name |recognizes-decimal-prefix)
+            :code $ quote $ do
+              is= true $ number-prefix? |7foo
+              is= true $ number-prefix? |-9
+              is= false $ number-prefix? |abc
+              is= false $ number-prefix? |-
+              is= false $ number-prefix? |
+            :tags $ #{} :theme :unit
         'style-expr $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def style-expr
             {} (:display :block) (:border-radius |8px) (:color :white) (:vertical-align :top) (:padding "|4px 4px 0px 8px") (:margin-left 8) (:margin-bottom 4) (:transition-duration |240ms) (:transition-property |border-color) (:border-width "|0 0 0 1px") (:border-style :solid)
@@ -410,6 +436,7 @@
         :code $ quote $ ns calcit-theme.theme
           :require (respo-ui.core :as ui)
             respo.util.format :refer $ [] hsl
+            calcit.test :refer $ is=
     'calcit-theme.types $ %{} 'FileEntry
       :defs $ {} $ 'StoreData
         %{} 'CodeEntry (:doc |)
