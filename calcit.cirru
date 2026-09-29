@@ -152,7 +152,7 @@
           :code $ quote $ defstyle css-expr
             {} (|& theme/style-expr)
               |&.on-hover $ {} $ :border-color
-                hsl 0 0 100 $ %some 0.7
+                hsl 0 0 100 $ Option :some 0.7
               |&.on-active $ {} $ :transform "|translate(1px,0px)"
           :examples $ []
           :schema $ :: 'String
@@ -161,14 +161,14 @@
             {} (|& theme/style-leaf)
               |& $ {} $ :user-select :text
               |&:hover $ {} $ :background-color
-                hsl 0 0 100 $ %some 0.1
+                hsl 0 0 100 $ Option :some 0.1
               |&:active $ {} $ :transform "|translate(1px, 0px)"
           :examples $ []
           :schema $ :: 'String
         'effect-highlight $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defeffect effect-highlight (root?) (action el at?)
             if root? $ let
-                *highlight $ atom $ %none
+                *highlight $ atom $ Option :none
               if (= action :mount) (register-hover! el *highlight)
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Effect)
@@ -204,7 +204,7 @@
                     .-class-list $ option:unwrap @*highlight
                     , |on-hover
                 .add! (.-class-list t) |on-hover
-                reset! *highlight $ %some t
+                reset! *highlight $ Option :some t
               , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
