@@ -10,15 +10,19 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: frontend-${{ github.repository }}-${{ github.event_name == 'pull_request' && 'pr' || github.ref }}
+  cancel-in-progress: false
+
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         persist-credentials: false
 
-    - uses: actions/setup-node@v6
+    - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
       with:
         node-version: 24
 
@@ -31,12 +35,14 @@ jobs:
     - uses: calcit-lang/setup-calcit@ca701be5a471759e442aa053cd100720bbe1f09f # v1.5.0
       with:
         tools: calcit,caps
+        caps-version: "0.1.1"
 
-    # reel still requests earlier Respo alpha releases, so strict Caps
-    # resolution would reject the otherwise compatible highest SemVer set.
     - name: Validate Calcit snapshot and type baseline
       run: |
-        caps --ci
+        set -euo pipefail
+        test ! -e compact.cirru
+        test ! -e package.cirru
+        caps --strict --ci
         yarn install --immutable
         caps verify --toolchain
         calcit calcit.cirru edit format
@@ -44,7 +50,7 @@ jobs:
         calcit calcit.cirru fix --workflow strict --verify --format edn
         calcit calcit.cirru --check-only
         calcit calcit.cirru test --require-match
-        calcit calcit.cirru analyze check-public --ns calcit-theme.main --ns calcit-theme.theme --ns calcit-theme.schema --ns calcit-theme.updater --summary-only
+        calcit calcit.cirru analyze check-public --ns calcit-theme.main --ns calcit-theme.theme --ns calcit-theme.schema --ns calcit-theme.updater --ns calcit-theme.comp.expr --ns calcit-theme.comp.container --ns calcit-theme.types --ns calcit-theme.config --summary-only
         calcit calcit.cirru analyze quality --baseline config/calcit-quality.cirru
 
     - name: Build client with CDN asset URLs
@@ -52,6 +58,7 @@ jobs:
       env:
         CDN_ORIGIN: https://cos-sh.tiye.me
       run: |
+        set -euo pipefail
         if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
           asset_prefix="${GITHUB_REPOSITORY}/pr/"
         else
@@ -63,6 +70,7 @@ jobs:
         echo "base-url=${VITE_BASE_URL}" >> "$GITHUB_OUTPUT"
         calcit calcit.cirru js
         yarn vite build --base="$VITE_BASE_URL"
+        node --test scripts/regression.test.mjs
 
     - name: Upload static assets to COS
       if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
