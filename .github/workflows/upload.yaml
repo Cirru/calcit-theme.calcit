@@ -11,8 +11,9 @@ permissions:
   contents: read
 
 concurrency:
-  group: frontend-${{ github.repository }}-${{ github.event_name == 'pull_request' && 'pr' || github.ref }}
+  group: frontend-${{ github.repository }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: false
+  queue: max
 
 jobs:
   test:
@@ -47,8 +48,7 @@ jobs:
         caps verify --toolchain
         calcit calcit.cirru edit format
         git diff --exit-code -- calcit.cirru
-        calcit calcit.cirru fix --workflow strict --verify --format edn
-        calcit calcit.cirru --check-only
+        calcit calcit.cirru --strict-types --check-only
         calcit calcit.cirru test --require-match
         calcit calcit.cirru analyze check-public --ns calcit-theme.main --ns calcit-theme.theme --ns calcit-theme.schema --ns calcit-theme.updater --ns calcit-theme.comp.expr --ns calcit-theme.comp.container --ns calcit-theme.types --ns calcit-theme.config --summary-only
         calcit calcit.cirru analyze quality --baseline config/calcit-quality.cirru
@@ -57,12 +57,15 @@ jobs:
       id: asset-path
       env:
         CDN_ORIGIN: https://cos-sh.tiye.me
+        PR_NUMBER: ${{ github.event.pull_request.number }}
       run: |
         set -euo pipefail
         if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
-          asset_prefix="${GITHUB_REPOSITORY}/pr/"
-        else
+          asset_prefix="${GITHUB_REPOSITORY}/pr/${PR_NUMBER}/${GITHUB_RUN_ID}/${GITHUB_RUN_ATTEMPT}/"
+        elif [[ "$GITHUB_REF" == "refs/heads/main" ]]; then
           asset_prefix="${GITHUB_REPOSITORY}/"
+        else
+          asset_prefix="${GITHUB_REPOSITORY}/branches/${GITHUB_REF_NAME}/${GITHUB_RUN_ID}/${GITHUB_RUN_ATTEMPT}/"
         fi
         export VITE_BASE_URL="${CDN_ORIGIN}/${asset_prefix}"
         echo "VITE_BASE_URL=${VITE_BASE_URL}" >> "$GITHUB_ENV"
@@ -72,9 +75,24 @@ jobs:
         yarn vite build --base="$VITE_BASE_URL"
         node --test scripts/regression.test.mjs
 
-    - name: Upload static assets to COS
-      if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
-      uses: worktools/cos-upload-action@17e6d213fe9f6772a6090a13c8ba044cd6cbcb09 # v1.1.1
+    - name: Skip superseded production deployment
+      id: deploy-head
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        current=true
+        if [[ "$GITHUB_EVENT_NAME" == "push" && "$GITHUB_REF" == "refs/heads/main" ]]; then
+          latest_sha=$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/heads/main" --jq '.object.sha')
+          if [[ "$latest_sha" != "$GITHUB_SHA" ]]; then
+            current=false
+            echo "::notice::Skipping superseded production deployment; main HEAD has changed."
+          fi
+        fi
+        echo "current=${current}" >> "$GITHUB_OUTPUT"
+
+    - name: Upload and verify static assets on COS
+      if: steps.deploy-head.outputs.current == 'true' && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
+      uses: worktools/cos-upload-action@06d6027dcca6413c5936e04a9b6e9f0d5ef71ba0 # v1.2.0
       with:
         source-dir: dist
         bucket: ${{ secrets.COS_BUCKET }}
@@ -85,7 +103,7 @@ jobs:
         secret-key: ${{ secrets.COS_SECRET_KEY }}
 
     - name: Install verified rsync
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      if: steps.deploy-head.outputs.current == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
       run: |
         set -euo pipefail
         curl --fail --location --silent --show-error \
@@ -100,7 +118,7 @@ jobs:
         echo "$RUNNER_TEMP/rsync-install/bin" >> "$GITHUB_PATH"
 
     - name: Configure verified SSH host
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      if: steps.deploy-head.outputs.current == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
       env:
         DEPLOY_KEY: ${{ secrets.rsync_private_key }}
       run: |
@@ -112,7 +130,7 @@ jobs:
         chmod 600 "$HOME/.ssh/known_hosts"
 
     - name: Deploy web assets
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      if: steps.deploy-head.outputs.current == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
       run: |
         set -euo pipefail
         rsync -avzr --progress \
