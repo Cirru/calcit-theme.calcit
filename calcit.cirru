@@ -13,7 +13,8 @@
         'comp-container $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-container (reel)
             let
-                store $ decode-map-as (reel-schema/read-field reel :store) 'calcit-theme.types/StoreData
+                store $ struct-match (reel-schema/read-field reel :store) (calcit-theme.types/StoreData checked checked)
+                  _ _ $ raise "|Expected Theme StoreData"
                 states $ :states store
                 data $ parse-cirru-list $ slurp |examples/demo.cirru
               div
@@ -275,9 +276,12 @@
             let
                 raw $ browser/storage-get $ option:unwrap (get config/site :storage-key)
               when (option:some? raw)
-                dispatch! $ :: :hydrate-storage $ decode-map-as
-                  parse-cirru-edn $ option:unwrap raw
-                  , 'calcit-theme.types/StoreData
+                dispatch! $ :: :hydrate-storage $ let
+                    stored $ parse-cirru-edn $ option:unwrap raw
+                  if (struct? stored)
+                    struct-match stored (calcit-theme.types/StoreData checked checked)
+                      _ _ $ raise "|Expected Theme StoreData"
+                    decode-map-as stored 'calcit-theme.types/StoreData
             println "|App started."
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)

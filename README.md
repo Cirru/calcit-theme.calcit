@@ -12,7 +12,7 @@ Calcit JS 项目的 Cirru 语法高亮主题。
 
 规范源文件为 `calcit.cirru` 和 `deps.cirru`，不应恢复 `compact.cirru` 或 `package.cirru`。CI 仅上传前端 `dist` 到 COS，并使用 Action v1.2.0 内置公开校验，不另加上传检查脚本。PR 资源按编号、run、attempt 隔离；上传排队而不中断，过期 main 运行在发布前跳过 COS 和服务器部署。原生产 COS 前缀和服务器部署路径保持不变。
 
-CI 不依赖固定 `fix --workflow strict`，保留全部定义严格检查、全部公开定义检查、原质量预算、原附属测试和三项 JS 回归测试，不放宽预算。循环改用 `loop` / `match`，节点先绑定再按 String / List 分支处理；Ref watcher 使用现行 API，回调与 dispatch 显式返回 Unit。存储仍在原 key 持久化原格式，读取时实际解码，不改变认证或部署路径。
+CI 不依赖固定 `fix --workflow strict`，保留全部定义严格检查、全部公开定义检查、原质量预算、原附属测试和三项 JS 回归测试，不放宽预算。循环改用 `loop` / `match`，节点先绑定再按 String / List 分支处理；Ref watcher 使用现行 API，回调与 dispatch 显式返回 Unit。存储仍在原 key 持久化原格式：名义 StoreData 经 `struct-match` 读取并保留原值，外部 Map 才解码，不对已解码 Struct 再做 Map 解码。原状态回归也覆盖 Demo 容器的实际渲染；不改变认证或部署路径。
 
 ```bash
 caps --strict --ci
