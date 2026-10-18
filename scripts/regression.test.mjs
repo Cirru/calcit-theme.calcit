@@ -3,11 +3,13 @@ import test from 'node:test';
 import * as clt from '../js-out/calcit.core.mjs';
 import * as browser from '../js-out/js-ffi.browser.mjs';
 import { render_expr } from '../js-out/calcit-theme.comp.expr.mjs';
+import { comp_container } from '../js-out/calcit-theme.comp.container.mjs';
+import { reel } from '../js-out/reel.schema.mjs';
 import { store, Op } from '../js-out/calcit-theme.schema.mjs';
 import { updater } from '../js-out/calcit-theme.updater.mjs';
 import { make_string } from '../js-out/respo.render.html.mjs';
 
-const t = clt.init_tags(['states', 'viewer', 'data', 'content', 'some', 'none']);
+const t = clt.init_tags(['states', 'viewer', 'data', 'content', 'some', 'none', 'store']);
 const map = clt._$n__$M_;
 const list = clt._$L_;
 const field = (v, k) => clt.option_$o_unwrap(clt.get(v, k));
@@ -27,6 +29,7 @@ test('typed state and content operations preserve one state tree', () => {
   const content = updater(next, clt._PCT__$o__$o_(Op, t.content, 'source'), 'content', 2);
   assert.equal(field(content, t.content), 'source');
   assert.equal(clt._$e_(field(content, t.states), field(next, t.states)), true);
+  assert.equal(typeof make_string(comp_container(clt.assoc(reel, t.store, content))), 'string');
 });
 
 test('the five Theme browser APIs remain available in the aligned FFI release', () => {
@@ -36,7 +39,14 @@ test('the five Theme browser APIs remain available in the aligned FFI release', 
   let scheduled;
   const descriptors = new Map(['localStorage', 'document', 'window', 'setTimeout'].map(k => [k, Object.getOwnPropertyDescriptor(globalThis, k)]));
   try {
-    globalThis.localStorage = { getItem: key => saved.get(key) ?? null, setItem: (key, value) => saved.set(key, value) };
+    globalThis.localStorage = {
+      get length() { return saved.size; },
+      getItem: key => saved.get(key) ?? null,
+      key: index => [...saved.keys()][index] ?? null,
+      setItem: (key, value) => { saved.set(key, value); },
+      removeItem: key => { saved.delete(key); },
+      clear: () => { saved.clear(); },
+    };
     globalThis.document = { querySelector: selector => selector === '.app' ? mount : null };
     globalThis.window = { localStorage: globalThis.localStorage, addEventListener: (name, callback) => { registered = { name, callback }; } };
     globalThis.setTimeout = (callback, delay) => { scheduled = { callback, delay }; return 1; };
