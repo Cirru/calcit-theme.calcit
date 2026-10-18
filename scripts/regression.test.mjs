@@ -36,7 +36,14 @@ test('the five Theme browser APIs remain available in the aligned FFI release', 
   let scheduled;
   const descriptors = new Map(['localStorage', 'document', 'window', 'setTimeout'].map(k => [k, Object.getOwnPropertyDescriptor(globalThis, k)]));
   try {
-    globalThis.localStorage = { getItem: key => saved.get(key) ?? null, setItem: (key, value) => saved.set(key, value) };
+    globalThis.localStorage = {
+      get length() { return saved.size; },
+      getItem: key => saved.get(key) ?? null,
+      key: index => [...saved.keys()][index] ?? null,
+      setItem: (key, value) => { saved.set(key, value); },
+      removeItem: key => { saved.delete(key); },
+      clear: () => { saved.clear(); },
+    };
     globalThis.document = { querySelector: selector => selector === '.app' ? mount : null };
     globalThis.window = { localStorage: globalThis.localStorage, addEventListener: (name, callback) => { registered = { name, callback }; } };
     globalThis.setTimeout = (callback, delay) => { scheduled = { callback, delay }; return 1; };

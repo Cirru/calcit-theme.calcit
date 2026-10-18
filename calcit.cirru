@@ -13,8 +13,8 @@
         'comp-container $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-container (reel)
             let
-                store $ reel-schema/read-field reel :store
-                states $ reel-schema/read-field store :states
+                store $ decode-map-as (reel-schema/read-field reel :store) 'calcit-theme.types/StoreData
+                states $ :states store
                 data $ parse-cirru-list $ slurp |examples/demo.cirru
               div
                 {} $ :class-name css-body
@@ -22,7 +22,7 @@
                 when dev? $ comp-reel (>> states :reel) reel $ {}
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
-            :args $ [] 'Dynamic
+            :args $ [] $ :: 'Map 'Tag 'Dynamic
         'css-body $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle css-body
             {} $ |$0 $ merge ui/global ui/fullscreen
@@ -89,51 +89,54 @@
                   :style $ theme/decorate-expr tailing? inline? root?
                   :on-mousedown $ fn (e d!) (handle-active-event! e true)
                   :on-mouseup $ fn (e d!) (handle-active-event! e false)
-                apply-args
-                    []
-                    , expr 0 nil
-                  fn (acc xs idx prev-kind)
-                    hint-fn $ {}
-                      :args $ [] (:: 'List 'Dynamic) (:: 'List 'Dynamic) 'Number 'Dynamic
-                      :return $ :: 'List 'Dynamic
+                loop
+                    acc $ []
+                    xs expr
+                    idx 0
+                    prev-kind :leaf
+                  hint-fn $ {}
+                    :args $ []
+                      :: 'List $ :: 'List 'Dynamic
+                      :: 'List 'Dynamic
+                      , 'Number 'Tag
+                    :return $ :: 'List $ :: 'List 'Dynamic
+                  let
+                      head $ option:unwrap-or (first xs) nil
                     cond
                         empty? xs
                         , acc
-                      (string? (option:unwrap-or (first xs) nil))
+                      (string? head)
                         recur
-                          conj acc $ [] idx $ comp-leaf
-                            option:unwrap-or (first xs) |
-                            &= 0 idx
+                          conj acc $ [] idx $ comp-leaf head (&= 0 idx)
                           rest xs
                           inc idx
                           , :leaf
-                      (&let (cursor (option:unwrap (first xs))) (and (= 1 (count cursor)) (string? (option:unwrap-or (first cursor) nil))))
+                      (and (list? head) (= 1 (count head)) (string? (option:unwrap-or (first head) nil)))
                         recur
-                          conj acc $ [] idx $ comp-expr
-                            option:unwrap $ first xs
-                            , false false true
+                          conj acc $ [] idx $ comp-expr head false false true
                           rest xs
                           inc idx
                           , :leaf
-                      true $ let
-                          cursor $ option:unwrap $ first xs
-                          size $ count cursor
-                          simple? $ every? cursor string?
-                          layout-kind $ if simple?
-                            case-default prev-kind
-                              prev-kind $ raise "|Unexpected case"
-                              nil $ if (> size 6) :expr :inline-expr
-                              :leaf $ if (> size 6) :expr :inline-expr
-                              :inline-expr $ if (> size 2) :expr :inline-expr
-                              :expr :expr
-                            , :expr
-                        recur
-                          conj acc $ [] idx $ comp-expr cursor
-                            = (inc idx) (count expr)
-                            , false (= layout-kind :inline-expr)
-                          rest xs
-                          inc idx
-                          , layout-kind
+                      (list? head)
+                        let
+                            cursor head
+                            size $ count cursor
+                            simple? $ every? cursor string?
+                            layout-kind $ if simple?
+                              match prev-kind
+                                :leaf $ if (> size 6) :expr :inline-expr
+                                :inline-expr $ if (> size 2) :expr :inline-expr
+                                :expr :expr
+                                _ $ raise "|Unexpected layout kind"
+                              , :expr
+                          recur
+                            conj acc $ [] idx $ comp-expr cursor
+                              = (inc idx) (count expr)
+                              , false (= layout-kind :inline-expr)
+                            rest xs
+                            inc idx
+                            , layout-kind
+                      true $ raise "|Expected a Cirru string or expression"
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
             :args $ [] (:: 'List 'Dynamic) 'Bool 'Bool 'Bool
@@ -250,13 +253,14 @@
     'calcit-theme.main $ %{} 'FileEntry
       :defs $ {}
         '*reel $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defatom *reel
+          :code $ quote $ defref *reel
             -> reel-schema/reel (assoc :base schema/store) (assoc :store schema/store)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Ref $ :: 'Map 'Tag 'Dynamic
         'dispatch! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch! (op) (; println |Dispatch: op)
             reset! *reel $ reel-updater updater @*reel op
+            , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'calcit-theme.schema/Op
@@ -264,14 +268,14 @@
           :code $ quote $ defn main! ()
             println "|Running mode:" $ if config/dev? |dev |release
             render-app!
-            add-watch *reel :changes $ fn (reel prev) (render-app!)
+            add-watch! *reel :changes $ fn (_reel _prev) (render-app!) &unit
             listen-devtools! |a dispatch!
             browser/add-event-listener! |beforeunload $ fn (_event) (persist-storage!)
             repeat! 60 persist-storage!
             let
                 raw $ browser/storage-get $ option:unwrap (get config/site :storage-key)
               when (option:some? raw)
-                dispatch! $ :: :hydrate-storage $ assert-type
+                dispatch! $ :: :hydrate-storage $ decode-map-as
                   parse-cirru-edn $ option:unwrap raw
                   , 'calcit-theme.types/StoreData
             println "|App started."
@@ -280,10 +284,11 @@
             :args $ []
         'mount-target $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn mount-target ()
-            option:unwrap $ browser/query-selector |.app
+            option:unwrap $ respo.ffi.browser/query-selector |.app
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'js-ffi.browser/DomElementHost)
+          :schema $ :: 'Fn $ {} (:return 'respo.dom/DomElement)
             :args $ []
+            :features $ #{} :js-ffi
         'persist-storage! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn persist-storage! ()
             browser/storage-set!
@@ -299,8 +304,8 @@
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! ()
             if (nil? build-errors)
-              do (clear-cache!) (remove-watch *reel :changes)
-                add-watch *reel :changes $ fn (reel prev) (render-app!)
+              do (clear-cache!) (remove-watch! *reel :changes)
+                add-watch! *reel :changes $ fn (_reel _prev) (render-app!) &unit
                 reset! *reel $ assert-type (refresh-reel @*reel schema/store updater) (:: 'Map 'Tag 'Dynamic)
                 println "|Code updated."
                 hud! |ok~ |Ok
@@ -418,31 +423,31 @@
             :tags $ #{} :theme :unit
         'style-expr $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def style-expr
-            {} (:display :block) (:border-radius |8px) (:color :white) (:vertical-align :top) (:padding "|4px 4px 0px 8px") (:margin-left 8) (:margin-bottom 4) (:transition-duration |240ms) (:transition-property |border-color) (:border-width "|0 0 0 1px") (:border-style :solid)
+            {} (:display |block) (:border-radius |8px) (:color |white) (:vertical-align |top) (:padding "|4px 4px 0px 8px") (:margin-left |8px) (:margin-bottom |4px) (:transition-duration |240ms) (:transition-property |border-color) (:border-width "|0 0 0 1px") (:border-style |solid)
               :border-color $ hsl 0 0 100 0.3
-              :min-height 24
-              :min-width 8
-              :user-select :none
+              :min-height |24px
+              :min-width |8px
+              :user-select |none
           :examples $ []
-          :schema $ :: 'String
+          :schema $ :: 'Map 'Tag 'String
         'style-leaf $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def style-leaf
-            {} (:display :inline-block) (:vertical-align :top) (:font-family ui/font-code) (:margin "|0 4px") (:padding "|0 4px")
+            {} (:display |inline-block) (:vertical-align |top) (:font-family ui/font-code) (:margin "|0 4px") (:padding "|0 4px")
               :color $ hsl 200 14 60
               :border-radius |4px
           :examples $ []
-          :schema $ :: 'String
+          :schema $ :: 'Map 'Tag 'String
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns calcit-theme.theme
           :require (respo-ui.core :as ui)
-            respo.util.format :refer $ [] hsl
+            respo.util.format :refer $ hsl
             calcit.test :refer $ is=
     'calcit-theme.types $ %{} 'FileEntry
       :defs $ {} $ 'StoreData
         %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct StoreData (:states 'Map) (:content 'String)
           :examples $ []
-          :schema $ :: 'Enum
+          :schema $ :: 'StructDef
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns calcit-theme.types
     'calcit-theme.updater $ %{} 'FileEntry
