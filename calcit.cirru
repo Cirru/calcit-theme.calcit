@@ -13,8 +13,12 @@
         'comp-container $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-container (reel)
             let
-                store $ struct-match (reel-schema/read-field reel :store) (calcit-theme.types/StoreData checked checked)
-                  _ _ $ raise "|Expected Theme StoreData"
+                store $ let
+                    raw-store $ reel-schema/read-field reel :store
+                  if (struct? raw-store)
+                    struct-match raw-store (calcit-theme.types/StoreData checked checked)
+                      _ _ $ raise "|Expected Theme StoreData"
+                    raise "|Expected Theme StoreData"
                 states $ :states store
                 data $ parse-cirru-list $ slurp |examples/demo.cirru
               div
@@ -112,31 +116,34 @@
                           rest xs
                           inc idx
                           , :leaf
-                      (and (list? head) (= 1 (count head)) (string? (option:unwrap-or (first head) nil)))
-                        recur
-                          conj acc $ [] idx $ comp-expr head false false true
-                          rest xs
-                          inc idx
-                          , :leaf
                       (list? head)
-                        let
-                            cursor head
-                            size $ count cursor
-                            simple? $ every? cursor string?
-                            layout-kind $ if simple?
-                              match prev-kind
-                                :leaf $ if (> size 6) :expr :inline-expr
-                                :inline-expr $ if (> size 2) :expr :inline-expr
-                                :expr :expr
-                                _ $ raise "|Unexpected layout kind"
-                              , :expr
+                        if
+                          and
+                            = 1 $ count head
+                            string? $ option:unwrap-or (first head) nil
                           recur
-                            conj acc $ [] idx $ comp-expr cursor
-                              = (inc idx) (count expr)
-                              , false (= layout-kind :inline-expr)
+                            conj acc $ [] idx $ comp-expr head false false true
                             rest xs
                             inc idx
-                            , layout-kind
+                            , :leaf
+                          let
+                              cursor head
+                              size $ count cursor
+                              simple? $ every? cursor string?
+                              layout-kind $ if simple?
+                                match prev-kind
+                                  :leaf $ if (> size 6) :expr :inline-expr
+                                  :inline-expr $ if (> size 2) :expr :inline-expr
+                                  :expr :expr
+                                  _ $ raise "|Unexpected layout kind"
+                                , :expr
+                            recur
+                              conj acc $ [] idx $ comp-expr cursor
+                                = (inc idx) (count expr)
+                                , false (= layout-kind :inline-expr)
+                              rest xs
+                              inc idx
+                              , layout-kind
                       true $ raise "|Expected a Cirru string or expression"
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
@@ -172,7 +179,7 @@
         'effect-highlight $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defeffect effect-highlight (root?) (action el at?)
             if root? $ let
-                *highlight $ atom $ Option :none
+                *highlight $ ref $ assert-type (Option :none) (:: 'Option 'calcit-theme.comp.expr/HighlightElementHost)
               if (= action :mount) (register-hover! el *highlight)
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Effect)
@@ -260,11 +267,24 @@
           :schema $ :: 'Ref $ :: 'Map 'Tag 'Dynamic
         'dispatch! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch! (op) (; println |Dispatch: op)
-            reset! *reel $ reel-updater updater @*reel op
+            reset! *reel $ reel-updater
+              fn (raw-store raw-op raw-id raw-time)
+                hint-fn $ {}
+                  :args $ [] 'Dynamic 'Dynamic 'Dynamic 'Dynamic
+                  :return 'calcit-theme.types/StoreData
+                updater
+                  if (struct? raw-store)
+                    struct-match raw-store (calcit-theme.types/StoreData checked checked)
+                      _ _ $ raise "|Expected Theme StoreData"
+                    decode-map-as raw-store calcit-theme.types/StoreData
+                  if (enum? raw-op) raw-op $ raise "|Expected Enum operation"
+                  decode-map-as raw-id 'String
+                  decode-map-as raw-time 'Number
+              , @*reel op
             , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'calcit-theme.schema/Op
+            :args $ [] 'Enum
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! ()
             println "|Running mode:" $ if config/dev? |dev |release
@@ -297,11 +317,14 @@
           :code $ quote $ defn persist-storage! ()
             browser/storage-set!
               option:unwrap $ get config/site :storage-key
-              format-cirru-edn $ assert-type
-                match (get @*reel :store)
-                  (:some data) data
-                  (:none) schema/store
-                , 'calcit-theme.types/StoreData
+              format-cirru-edn $ let
+                  stored $ match (get @*reel :store)
+                    (:some data) data
+                    (:none) schema/store
+                if (struct? stored)
+                  struct-match stored (calcit-theme.types/StoreData checked checked)
+                    _ _ $ raise "|Expected Theme StoreData"
+                  decode-map-as stored calcit-theme.types/StoreData
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ []
@@ -310,16 +333,22 @@
             if (nil? build-errors)
               do (clear-cache!) (remove-watch! *reel :changes)
                 add-watch! *reel :changes $ fn (_reel _prev) (render-app!) &unit
-                reset! *reel $ assert-type (refresh-reel @*reel schema/store updater) (:: 'Map 'Tag 'Dynamic)
+                reset! *reel $ decode-map-as (refresh-reel @*reel schema/store updater) (:: 'Map 'Tag 'Dynamic)
                 println "|Code updated."
                 hud! |ok~ |Ok
               hud! |error build-errors
+            , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ []
         'render-app! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-app! ()
-            render! (mount-target) (comp-container @*reel) dispatch!
+            render! (mount-target) (comp-container @*reel)
+              fn (raw-op)
+                hint-fn $ {}
+                  :args $ [] 'Dynamic
+                  :return 'Unit
+                if (enum? raw-op) (dispatch! raw-op) (raise "|Expected Enum operation")
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ []
@@ -460,13 +489,22 @@
           :code $ quote $ defn updater (store op op-id op-time)
             match op
               (:states cursor s)
-                assoc store :states $ update-state-tree (:states store) cursor s
-              (:content c) (assoc store :content c)
-              (:hydrate-storage d) d
+                assoc store :states $ decode-map-as
+                  update-state-tree (:states store)
+                    decode-map-as cursor $ :: 'List 'Dynamic
+                    , s
+                  , 'Map
+              (:content c)
+                assoc store :content $ decode-map-as c 'String
+              (:hydrate-storage d)
+                if (struct? d)
+                  struct-match d (calcit-theme.types/StoreData checked checked)
+                    _ _ $ raise "|Expected Theme StoreData"
+                  decode-map-as d calcit-theme.types/StoreData
               _ $ do (eprintln "|unknown op:" op) store
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'calcit-theme.types/StoreData)
-            :args $ [] 'calcit-theme.types/StoreData 'calcit-theme.schema/Op 'String 'Number
+            :args $ [] 'calcit-theme.types/StoreData 'Enum 'String 'Number
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns calcit-theme.updater
           :require $ respo.cursor :refer $ update-state-tree

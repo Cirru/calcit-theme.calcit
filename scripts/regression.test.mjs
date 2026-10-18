@@ -2,14 +2,15 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import * as clt from '../js-out/calcit.core.mjs';
 import * as browser from '../js-out/js-ffi.browser.mjs';
-import { render_expr } from '../js-out/calcit-theme.comp.expr.mjs';
+import { render_expr, effect_highlight } from '../js-out/calcit-theme.comp.expr.mjs';
+import { effect_args, effect_method } from '../js-out/respo.util.detect.mjs';
 import { comp_container } from '../js-out/calcit-theme.comp.container.mjs';
 import { reel } from '../js-out/reel.schema.mjs';
 import { store, Op } from '../js-out/calcit-theme.schema.mjs';
 import { updater } from '../js-out/calcit-theme.updater.mjs';
 import { make_string } from '../js-out/respo.render.html.mjs';
 
-const t = clt.init_tags(['states', 'viewer', 'data', 'content', 'some', 'none', 'store']);
+const t = clt.init_tags(['states', 'viewer', 'data', 'content', 'some', 'none', 'store', 'mount']);
 const map = clt._$n__$M_;
 const list = clt._$L_;
 const field = (v, k) => clt.option_$o_unwrap(clt.get(v, k));
@@ -20,6 +21,22 @@ test('public renderer handles nested expressions and empty expressions', () => {
   assert.match(html, /main!/);
   assert.match(html, /hello/);
   assert.equal(typeof make_string(render_expr(list())), 'string');
+  let hover;
+  const root = { tagName: 'DIV', classList: { add() {}, remove() {} }, addEventListener(name, callback) { assert.equal(name, 'mouseover'); hover = callback; } };
+  const effect = effect_highlight(true);
+  effect_method(effect)(effect_args(effect), list(t.mount, root, true));
+  const element = tagName => {
+    const classes = new Set();
+    return { tagName, classes, addEventListener() {}, classList: { add: name => { classes.add(name); }, remove: name => { classes.delete(name); } } };
+  };
+  const first = element('DIV'), second = element('DIV');
+  hover({ target: first });
+  assert.equal(first.classes.has('on-hover'), true);
+  hover({ target: second });
+  assert.equal(first.classes.has('on-hover'), false);
+  assert.equal(second.classes.has('on-hover'), true);
+  hover({ target: element('SPAN') });
+  assert.equal(second.classes.has('on-hover'), true);
 });
 
 test('typed state and content operations preserve one state tree', () => {
