@@ -288,11 +288,6 @@
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! ()
             println "|Running mode:" $ if config/dev? |dev |release
-            render-app!
-            add-watch! *reel :changes $ fn (_reel _prev) (render-app!) &unit
-            listen-devtools! |a dispatch!
-            browser/add-event-listener! |beforeunload $ fn (_event) (persist-storage!)
-            repeat! 60 persist-storage!
             let
                 raw $ browser/storage-get $ option:unwrap (get config/site :storage-key)
               when (option:some? raw)
@@ -302,6 +297,11 @@
                     struct-match stored (calcit-theme.types/StoreData checked checked)
                       _ _ $ raise "|Expected Theme StoreData"
                     decode-map-as stored 'calcit-theme.types/StoreData
+            render-app!
+            add-watch! *reel :changes $ fn (_reel _prev) (render-app!) &unit
+            listen-devtools! |a dispatch!
+            browser/add-event-listener! |beforeunload $ fn (_event) (persist-storage!)
+            repeat! 60 persist-storage!
             println "|App started."
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
