@@ -49,8 +49,8 @@ jobs:
         caps verify --toolchain
         calcit calcit.cirru edit format
         git diff --exit-code -- calcit.cirru
-        calcit calcit.cirru --strict-types --check-only --all-defs
-        calcit calcit.cirru fix --workflow strict --verify
+        calcit calcit.cirru --check-only --all-defs
+        calcit calcit.cirru fix --workflow strict --verify --format json | jq -e '.data.workflow.status == "passed" and .diagnostics == []'
         calcit calcit.cirru test --require-match
         calcit calcit.cirru --check-only --ns calcit-theme.main --ns calcit-theme.theme --ns calcit-theme.schema --ns calcit-theme.updater --ns calcit-theme.comp.expr --ns calcit-theme.comp.container --ns calcit-theme.types --ns calcit-theme.config --summary-only
         calcit calcit.cirru analyze quality --baseline config/calcit-quality.cirru
