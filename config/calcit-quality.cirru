@@ -71,7 +71,7 @@
       :typeNone 0
       :typeNotFull 0
       :unresolved 0
-      :unsafeCoerce 1
+      :unsafeCoerce 0
     |calcit-theme.main/mount-target $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -80,7 +80,7 @@
       :typeNone 0
       :typeNotFull 0
       :unresolved 0
-      :unsafeCoerce 1
+      :unsafeCoerce 0
     |calcit-theme.main/render-app! $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -118,14 +118,14 @@
       :unresolved 0
       :unsafeCoerce 0
   :metrics $ {} (:codeDynamic 0)
-    :codeNil 4
+    :codeNil 2
     :declaredOptional 0
     :deprecatedCalls 0
-    :schemaDynamic 5
+    :schemaDynamic 4
     :typeNone 0
-    :typeNotFull 10
-    :unresolved 9
-    :unsafeCoerce 5
+    :typeNotFull 7
+    :unresolved 6
+    :unsafeCoerce 3
   :scope $ {} (:includeDependencies false)
     :namespace nil
     :namespacePrefix nil

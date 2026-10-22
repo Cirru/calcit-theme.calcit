@@ -14,7 +14,7 @@ Demo 启动先恢复存档，再渲染及注册自动保存；解析/解码失�
 
 规范源文件为 `calcit.cirru` 和 `deps.cirru`，不应恢复 `compact.cirru` 或 `package.cirru`。CI 仅上传前端 `dist` 到 COS，并使用 Action v1.2.0 内置公开校验，不另加上传检查脚本。PR 资源按编号、run、attempt 隔离；上传排队而不中断，过期 main 运行在发布前跳过 COS 和服务器部署。原生产 COS 前缀和服务器部署路径保持不变。
 
-CI 使用完整 `fix --workflow strict --verify` 门禁，保留全部定义严格检查、全部公开定义检查、原质量预算、原附属测试和三项 JS 回归测试，不放宽预算。循环改用 `loop` / `match`，节点先绑定再按 String / List 分支处理；Ref watcher 使用现行 API，回调与 dispatch 显式返回 Unit。存储仍在原 key 持久化原格式：名义 StoreData 经 `struct?` / `struct-match` 读取并保留原值，外部 Map 才解码，不对已解码 Struct 再做 Map 解码。原状态回归也覆盖 Demo 容器的实际渲染；不改变认证或部署路径。
+CI 使用完整 `fix --workflow strict --verify` 门禁，保留全部定义严格检查、全部公开定义检查、原附属测试和三项 JS 回归测试。质量预算只收紧：unsafe 上限 5→3，已无强转的 main!/mount-target 各 1→0；全局 typeNotFull 10→7、schemaDynamic 5→4、codeNil 4→2、unresolved 9→6，其他额度不放宽。循环使用 `loop` / `match`，节点先绑定再按 String / List 分支处理；Ref watcher 使用现行 API，回调与 dispatch 显式返回 Unit。存储仍在原 key 持久化原格式：名义 StoreData 经 `struct?` / `struct-match` 读取并保留原值，外部 Map 才解码，不对已解码 Struct 再做 Map 解码。原状态回归也覆盖 Demo 容器的实际渲染；不改变认证或部署路径。
 
 0.4.10 已将新建的 `Option :none` 声明为 `Option<HighlightElementHost>`，再创建 `ref`，不是将已有可变 Ref 强转成另一类型。hover 仍只处理 DIV，切换节点时移除前一节点高亮；本轮没有改监听器生命周期或新增宿主信任权限。List 分支保持单叶内联与长列表布局。Demo 的动态 Reel/状态/存储输入继续经过实际 Enum、List、Map 或 nominal 守卫；未知 Enum 操作仍走原警告分支。现有三个 DOM unsafe 边界与原质量预算不变，不声称已清零。
 
