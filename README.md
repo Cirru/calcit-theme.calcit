@@ -4,7 +4,15 @@ Calcit JS 项目的 Cirru 语法高亮主题。
 
 从 ClojureScript 版本的 calcit-theme 移植。
 
-### 开发与验证
+### 当前工具链与使用者影响
+
+当前候选将 CLI / `@calcit/procs` 成对升级到正式 **0.31.0**，模块图配对已发布的 Reel 0.7.0-alpha.1、Respo 0.17.0-alpha.2、UI 0.9.0-alpha.1 和 js-ffi 0.2.5；原 0.30 消费者不能只更新此模块。请同步模块图、重新生成 JS 并完整刷新；新版 UI 可能改变 Demo 控件外观，不承诺逐像素相同。本候选尚未发布新 tag，不用 main/hash 替代已发布依赖。
+
+15 处旧 Option 函数调用改为同义接收者方法，4 处已确认 List 的 `count` 改为 `.len`。默认 entry 将 dispatch slot 绑定到已有 Op，并收紧原渲染入口回调的输入提示；原 Enum 守卫与公开 dispatch 合同保留。hover/active 宿主合同及三个既有 DOM unsafe 边界不变；不新增编译器改写规则或项目验证脚本。完整 strict、默认审计及原质量预算保持，不增加类型例外。npm 隔离采用已批准的一小时策略，不保留旧 procs 单包豁免。
+
+存档兼容：序列化会丢失 Struct 名义来源，直接把解析结果作为本地 StoreData 会在 0.31 被拒绝。恢复入口现在共享受检 decoder：本地 Store 保留原对象，旧 Map 校验字段，无来源且具有原 StoreData 布局的 wire 值转 Map 后校验字段并构造本地 Store。其他来源/布局不被当成本地身份，错误字段仍报错。原 key、格式、状态与内容不变，恢复失败仍在启用保存之前停止，不清空或补默认值。新增一项附带回归，并在原 JS 回归中覆盖序列化往返、身份保留和错误字段拒绝；未新增脚本或测试框架。
+
+### 历史：正式 0.30.1 配对与开发验证
 
 使用者影响：项目使用精确配套正式 Calcit / @calcit/procs **0.30.1**、Node.js 24、Yarn 4.18.0 和 Vite 8.3.1；升级后完整刷新。浏览器存储、事件与计时器通过 `js-ffi.browser` 的类型化接口调用；模块消费者直接引用 Calcit 定义，不需要额外加载 JavaScript 文件。
 

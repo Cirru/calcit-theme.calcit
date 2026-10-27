@@ -8,6 +8,7 @@ import { comp_container } from '../js-out/calcit-theme.comp.container.mjs';
 import { reel } from '../js-out/reel.schema.mjs';
 import { store, Op } from '../js-out/calcit-theme.schema.mjs';
 import { updater } from '../js-out/calcit-theme.updater.mjs';
+import { restore_store } from '../js-out/calcit-theme.types.mjs';
 import { make_string } from '../js-out/respo.render.html.mjs';
 
 const t = clt.init_tags(['states', 'viewer', 'data', 'content', 'some', 'none', 'store', 'mount']);
@@ -46,6 +47,9 @@ test('typed state and content operations preserve one state tree', () => {
   const content = updater(next, clt._PCT__$o__$o_(Op, t.content, 'source'), 'content', 2);
   assert.equal(field(content, t.content), 'source');
   assert.equal(clt._$e_(field(content, t.states), field(next, t.states)), true);
+  assert.equal(clt._$e_(restore_store(clt.parse_cirru_edn(clt.format_cirru_edn(content))), content), true);
+  assert.equal(restore_store(content), content);
+  assert.throws(() => restore_store(map(t.states, map(), t.content, 42)));
   assert.equal(typeof make_string(comp_container(clt.assoc(reel, t.store, content))), 'string');
 });
 
