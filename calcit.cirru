@@ -6,7 +6,7 @@
     {} (:description |) (:init-fn 'calcit-theme.main/main!) (:mode :js) (:reload-fn 'calcit-theme.main/reload!) (:target :browser)
       :feature-policy $ {}
       :modules $ [] |respo.calcit/ |respo-ui.calcit/ |reel.calcit/
-      :type-slots $ {}
+      :type-slots $ {} $ :dispatch-op |calcit-theme.schema/Op
   :files $ {}
     'calcit-theme.comp.container $ %{} 'FileEntry
       :defs $ {}
@@ -106,7 +106,9 @@
                       , 'Number 'Tag
                     :return $ :: 'List $ :: 'List 'Dynamic
                   let
-                      head $ option:unwrap-or (first xs) nil
+                      head $
+                        first xs
+                        , .unwrap-or nil
                     cond
                         empty? xs
                         , acc
@@ -119,8 +121,10 @@
                       (list? head)
                         if
                           and
-                            = 1 $ count head
-                            string? $ option:unwrap-or (first head) nil
+                            = 1 $ head .len
+                            string? $
+                              first head
+                              , .unwrap-or nil
                           recur
                             conj acc $ [] idx $ comp-expr head false false true
                             rest xs
@@ -128,7 +132,7 @@
                             , :leaf
                           let
                               cursor head
-                              size $ count cursor
+                              size $ cursor .len
                               simple? $ every? cursor string?
                               layout-kind $ if simple?
                                 match prev-kind
@@ -139,7 +143,7 @@
                                 , :expr
                             recur
                               conj acc $ [] idx $ comp-expr cursor
-                                = (inc idx) (count expr)
+                                = (inc idx) (expr .len)
                                 , false (= layout-kind :inline-expr)
                               rest xs
                               inc idx
@@ -189,7 +193,8 @@
           :code $ quote $ defn handle-active-event! (e active?)
             let
                 event $ unsafe-coerce
-                  option:unwrap $ get e :event
+                    get e :event
+                    , .unwrap
                   , HighlightEventHost
                 target $ .-target event
               if
@@ -209,10 +214,10 @@
               when
                 = |DIV $ .-tag-name t
                 if
-                  and (option:some? @*highlight)
-                    not $ identical? t $ option:unwrap @*highlight
+                  and (@*highlight .some?)
+                    not $ identical? t $ @*highlight .unwrap
                   .remove!
-                    .-class-list $ option:unwrap @*highlight
+                    .-class-list $ @*highlight .unwrap
                     , |on-hover
                 .add! (.-class-list t) |on-hover
                 reset! *highlight $ Option :some t
@@ -248,7 +253,9 @@
       :defs $ {}
         'dev? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def dev?
-            = |dev $ option:unwrap-or (get-env |mode) |release
+            = |dev $
+              get-env |mode
+              , .unwrap-or |release
           :examples $ []
           :schema $ :: 'Bool
         'site $ %{} 'CodeEntry (:doc |)
@@ -272,11 +279,7 @@
                 hint-fn $ {}
                   :args $ [] 'Dynamic 'Dynamic 'Dynamic 'Dynamic
                   :return 'calcit-theme.types/StoreData
-                updater
-                  if (struct? raw-store)
-                    struct-match raw-store (calcit-theme.types/StoreData checked checked)
-                      _ _ $ raise "|Expected Theme StoreData"
-                    decode-map-as raw-store calcit-theme.types/StoreData
+                updater (calcit-theme.types/restore-store raw-store)
                   if (enum? raw-op) raw-op $ raise "|Expected Enum operation"
                   decode-map-as raw-id 'String
                   decode-map-as raw-time 'Number
@@ -289,14 +292,13 @@
           :code $ quote $ defn main! ()
             println "|Running mode:" $ if config/dev? |dev |release
             let
-                raw $ browser/storage-get $ option:unwrap (get config/site :storage-key)
-              when (option:some? raw)
+                raw $ browser/storage-get $
+                  get config/site :storage-key
+                  , .unwrap
+              when (raw .some?)
                 dispatch! $ :: :hydrate-storage $ let
-                    stored $ parse-cirru-edn $ option:unwrap raw
-                  if (struct? stored)
-                    struct-match stored (calcit-theme.types/StoreData checked checked)
-                      _ _ $ raise "|Expected Theme StoreData"
-                    decode-map-as stored 'calcit-theme.types/StoreData
+                    stored $ parse-cirru-edn $ raw .unwrap
+                  calcit-theme.types/restore-store stored
             render-app!
             add-watch! *reel :changes $ fn (_reel _prev) (render-app!) &unit
             listen-devtools! |a dispatch!
@@ -308,7 +310,7 @@
             :args $ []
         'mount-target $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn mount-target ()
-            option:unwrap $ respo.ffi.browser/query-selector |.app
+            (respo.ffi.browser/query-selector |.app) .unwrap
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.dom/DomElement)
             :args $ []
@@ -316,7 +318,8 @@
         'persist-storage! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn persist-storage! ()
             browser/storage-set!
-              option:unwrap $ get config/site :storage-key
+                get config/site :storage-key
+                , .unwrap
               format-cirru-edn $ let
                   stored $ match (get @*reel :store)
                     (:some data) data
@@ -346,7 +349,7 @@
             render! (mount-target) (comp-container @*reel)
               fn (raw-op)
                 hint-fn $ {}
-                  :args $ [] 'Dynamic
+                  :args $ [] 'calcit-theme.schema/Op
                   :return 'Unit
                 if (enum? raw-op) (dispatch! raw-op) (raise "|Expected Enum operation")
           :examples $ []
@@ -430,19 +433,21 @@
         'expr-simple? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn expr-simple? (expr)
             and (every? expr string?)
-              < (count expr) 6
+              < (expr .len) 6
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Bool)
             :args $ [] $ :: 'List 'Tag
         'number-prefix? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn number-prefix? (text)
             let
-                first-char $ option:unwrap-or (get text 0) |
+                first-char $
+                  get text 0
+                  , .unwrap-or |
                 digit $ if (= first-char |-)
-                  option:unwrap-or (get text 1) |
+                  (get text 1) .unwrap-or |
                   , first-char
               and (not= digit |)
-                option:some? $ str-find-index |0123456789 digit
+                (str-find-index |0123456789 digit) .some?
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Bool)
             :args $ [] 'String
@@ -476,11 +481,48 @@
             respo.util.format :refer $ hsl
             calcit.test :refer $ is=
     'calcit-theme.types $ %{} 'FileEntry
-      :defs $ {} $ 'StoreData
-        %{} 'CodeEntry (:doc |)
+      :defs $ {}
+        'StoreData $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct StoreData (:states 'Map) (:content 'String)
           :examples $ []
           :schema $ :: 'StructDef
+        'restore-store $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn restore-store (data)
+            if (struct? data)
+              struct-match data (StoreData checked checked)
+                _ other $ let
+                    wire-template $ parse-cirru-edn $ format-cirru-edn
+                      StoreData :states ({}) :content |
+                  if (struct? wire-template)
+                    if
+                      = (struct-definition other) (struct-definition wire-template)
+                      decode-map-as (&struct:to-map other) 'calcit-theme.types/StoreData
+                      raise "|Expected Theme StoreData"
+                    raise "|Expected Theme StoreData"
+              decode-map-as data 'calcit-theme.types/StoreData
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'calcit-theme.types/StoreData)
+            :args $ [] 'T
+            :generics $ [] 'T
+          :tests $ [] $ %{} 'TestEntry (:name |legacy-map-and-store-roundtrip)
+            :code $ quote $ let
+                legacy $ {}
+                  :states $ {}
+                  :content "|saved 🐈"
+                store $ restore-store legacy
+                restored $ restore-store $ parse-cirru-edn (format-cirru-edn store)
+                bad? $ ref false
+              assert= (:content store) "|saved 🐈"
+              assert= store restored
+              assert=
+                identical? store $ restore-store store
+                , true
+              try
+                restore-store $ {}
+                  :states $ {}
+                  :content 42
+                fn (error) (reset! bad? true)
+              assert= @bad? true
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns calcit-theme.types
     'calcit-theme.updater $ %{} 'FileEntry
@@ -496,11 +538,7 @@
                   , 'Map
               (:content c)
                 assoc store :content $ decode-map-as c 'String
-              (:hydrate-storage d)
-                if (struct? d)
-                  struct-match d (calcit-theme.types/StoreData checked checked)
-                    _ _ $ raise "|Expected Theme StoreData"
-                  decode-map-as d calcit-theme.types/StoreData
+              (:hydrate-storage d) (calcit-theme.types/restore-store d)
               _ $ do (eprintln "|unknown op:" op) store
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'calcit-theme.types/StoreData)
