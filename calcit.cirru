@@ -26,22 +26,20 @@
                 render-expr data
                 when dev? $ comp-reel (>> states :reel) reel $ {}
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
-            :args $ [] $ :: 'Map 'Tag 'Dynamic
+          :schema $ quote $ Fn (Map Tag Dynamic) (-> respo.schema/Component)
         'css-body $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle css-body
             {} $ |$0 $ merge ui/global ui/fullscreen
               {} $ :background-color :black
           :examples $ []
-          :schema $ :: 'String
+          :schema $ quote String
         'slurp $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defmacro slurp (file)
             read-file $ str file
           :examples $ []
-          :schema $ :: 'Macro $ {}
-            :capabilities $ #{} :fs-read
-            :expansion $ :: 'Expr 'String
-            :required $ [] $ :: 'Expr 'String
+          :schema $ quote $ Macro (Expr String)
+            -> $ Expr String
+            :capabilities :fs-read
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns calcit-theme.comp.container
           :require
@@ -59,32 +57,29 @@
         'DomTokenListHost $ %{} 'CodeEntry
           :doc "|DOMTokenList operations used by the hover highlighter."
           :code $ quote $ deftrait DomTokenListHost
-            .add! $ :: 'Fn $ {} (:return 'Unit)
-              :args $ [] 'calcit-theme.comp.expr/DomTokenListHost 'String
-            .remove! $ :: 'Fn $ {} (:return 'Unit)
-              :args $ [] 'calcit-theme.comp.expr/DomTokenListHost 'String
+            .add! $ quote $ Fn calcit-theme.comp.expr/DomTokenListHost String (-> Unit)
+            .remove! $ quote $ Fn calcit-theme.comp.expr/DomTokenListHost String (-> Unit)
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
             :names $ {} (:add! |add) (:remove! |remove)
-          :schema $ :: 'Trait
+          :schema $ quote Trait
         'HighlightElementHost $ %{} 'CodeEntry
           :doc "|DOM element surface used by the hover highlighter."
           :code $ quote $ deftrait HighlightElementHost (:tag-name 'String) (:class-list 'calcit-theme.comp.expr/DomTokenListHost)
-            .add-event-listener! $ :: 'Fn $ {} (:return 'Unit)
-              :args $ [] 'calcit-theme.comp.expr/HighlightElementHost 'String $ :: 'Fn
-                {} (:return 'Unit)
-                  :args $ [] 'calcit-theme.comp.expr/HighlightEventHost
+            .add-event-listener! $ quote $ Fn calcit-theme.comp.expr/HighlightElementHost String
+              Fn calcit-theme.comp.expr/HighlightEventHost $ -> Unit
+              -> Unit
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
             :names $ {} (:add-event-listener! |addEventListener) (:class-list |classList) (:tag-name |tagName)
-          :schema $ :: 'Trait
+          :schema $ quote Trait
         'HighlightEventHost $ %{} 'CodeEntry
           :doc "|Mouse event surface used by the hover highlighter."
           :code $ quote $ deftrait HighlightEventHost (:target 'calcit-theme.comp.expr/HighlightElementHost) (:current-target 'calcit-theme.comp.expr/HighlightElementHost)
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
             :names $ {} $ :current-target |currentTarget
-          :schema $ :: 'Trait
+          :schema $ quote Trait
         'comp-expr $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-expr (expr tailing? root? inline?)
             assert "|expr in list" $ list? expr
@@ -99,12 +94,11 @@
                     xs expr
                     idx 0
                     prev-kind :leaf
-                  hint-fn $ {}
-                    :args $ []
-                      :: 'List $ :: 'List 'Dynamic
-                      :: 'List 'Dynamic
-                      , 'Number 'Tag
-                    :return $ :: 'List $ :: 'List 'Dynamic
+                  hint-fn $ Fn
+                    List $ List Dynamic
+                    List Dynamic
+                    , Number Tag $ ->
+                      List $ List Dynamic
                   let
                       head $
                         first xs
@@ -150,9 +144,7 @@
                               , layout-kind
                       true $ raise "|Expected a Cirru string or expression"
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
-            :args $ [] (:: 'List 'Dynamic) 'Bool 'Bool 'Bool
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn (List Dynamic) Bool Bool Bool (-> respo.schema/Component) (:features :js-ffi)
         'comp-leaf $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-leaf (x head?)
             assert "|string for leaf" $ string? x
@@ -161,8 +153,7 @@
                 :style $ theme/decorate-leaf x head?
               <> x
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
-            :args $ [] 'String 'Bool
+          :schema $ quote $ Fn String Bool (-> respo.schema/Component)
         'css-expr $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle css-expr
             {} (|& theme/style-expr)
@@ -170,7 +161,7 @@
                 hsl 0 0 100 $ Option :some 0.7
               |&.on-active $ {} $ :transform "|translate(1px,0px)"
           :examples $ []
-          :schema $ :: 'String
+          :schema $ quote String
         'css-leaf $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle css-leaf
             {} (|& theme/style-leaf)
@@ -179,16 +170,15 @@
                 hsl 0 0 100 $ Option :some 0.1
               |&:active $ {} $ :transform "|translate(1px, 0px)"
           :examples $ []
-          :schema $ :: 'String
+          :schema $ quote String
         'effect-highlight $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defeffect effect-highlight (root?) (action el at?)
             if root? $ let
-                *highlight $ ref $ assert-type (Option :none) (:: 'Option 'calcit-theme.comp.expr/HighlightElementHost)
+                *highlight $ ref $ assert-type (Option :none)
+                  quote $ Option calcit-theme.comp.expr/HighlightElementHost
               if (= action :mount) (register-hover! el *highlight)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Effect)
-            :args $ [] 'Bool
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn Bool (-> respo.schema/Effect) (:features :js-ffi)
         'handle-active-event! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn handle-active-event! (e active?)
             let
@@ -204,9 +194,7 @@
                   .remove! (.-class-list target) |on-active
               , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'Dynamic 'Bool
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn Dynamic Bool (-> Unit) (:features :js-ffi)
         'handle-hover! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn handle-hover! (*highlight event)
             let
@@ -223,23 +211,21 @@
                 reset! *highlight $ Option :some t
               , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
-              :: 'Ref $ :: 'calcit.core/Option 'calcit-theme.comp.expr/HighlightElementHost
-              , 'calcit-theme.comp.expr/HighlightEventHost
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn
+            Ref $ calcit.core/Option calcit-theme.comp.expr/HighlightElementHost
+            , calcit-theme.comp.expr/HighlightEventHost (-> Unit) (:features :js-ffi)
         'register-hover! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn register-hover! (el *highlight)
             .add-event-listener! (unsafe-coerce el HighlightElementHost) |mouseover $ fn (event) (handle-hover! *highlight event)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'Dynamic $ :: 'Ref (:: 'calcit.core/Option 'calcit-theme.comp.expr/HighlightElementHost)
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn Dynamic
+            Ref $ calcit.core/Option calcit-theme.comp.expr/HighlightElementHost
+            -> Unit
+            :features :js-ffi
         'render-expr $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-expr (data) (comp-expr data false true false)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
-            :args $ [] $ :: 'List 'Dynamic
+          :schema $ quote $ Fn (List Dynamic) (-> respo.schema/Component)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns calcit-theme.comp.expr
           :require
@@ -257,12 +243,12 @@
               get-env |mode
               , .unwrap-or |release
           :examples $ []
-          :schema $ :: 'Bool
+          :schema $ quote Bool
         'site $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def site
             {} (:title "|Calcit Theme") (:icon |http://cdn.tiye.me/logo/cirru.png) (:storage-key |calcit-theme)
           :examples $ []
-          :schema $ :: 'Map 'Tag 'String
+          :schema $ quote $ Map Tag String
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns calcit-theme.config
     'calcit-theme.main $ %{} 'FileEntry
@@ -271,14 +257,12 @@
           :code $ quote $ defref *reel
             -> reel-schema/reel (assoc :base schema/store) (assoc :store schema/store)
           :examples $ []
-          :schema $ :: 'Ref $ :: 'Map 'Tag 'Dynamic
+          :schema $ quote $ Ref (Map Tag Dynamic)
         'dispatch! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch! (op) (; println |Dispatch: op)
             reset! *reel $ reel-updater
               fn (raw-store raw-op raw-id raw-time)
-                hint-fn $ {}
-                  :args $ [] 'Dynamic 'Dynamic 'Dynamic 'Dynamic
-                  :return 'calcit-theme.types/StoreData
+                hint-fn $ Fn Dynamic Dynamic Dynamic Dynamic $ -> calcit-theme.types/StoreData
                 updater (calcit-theme.types/restore-store raw-store)
                   if (enum? raw-op) raw-op $ raise "|Expected Enum operation"
                   decode-map-as raw-id 'String
@@ -286,8 +270,7 @@
               , @*reel op
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'Enum
+          :schema $ quote $ Fn Enum (-> Unit)
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! ()
             println "|Running mode:" $ if config/dev? |dev |release
@@ -306,15 +289,12 @@
             repeat! 60 persist-storage!
             println "|App started."
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
+          :schema $ quote $ Fn (-> Unit)
         'mount-target $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn mount-target ()
             (respo.ffi.browser/query-selector |.app) .unwrap
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.dom/DomElement)
-            :args $ []
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn (-> respo.dom/DomElement) (:features :js-ffi)
         'persist-storage! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn persist-storage! ()
             browser/storage-set!
@@ -329,8 +309,7 @@
                     _ _ $ raise "|Expected Theme StoreData"
                   decode-map-as stored calcit-theme.types/StoreData
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
+          :schema $ quote $ Fn (-> Unit)
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! ()
             if (nil? build-errors)
@@ -342,19 +321,15 @@
               hud! |error build-errors
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
+          :schema $ quote $ Fn (-> Unit)
         'render-app! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-app! ()
             render! (mount-target) (comp-container @*reel)
               fn (raw-op)
-                hint-fn $ {}
-                  :args $ [] 'calcit-theme.schema/Op
-                  :return 'Unit
+                hint-fn $ Fn calcit-theme.schema/Op $ -> Unit
                 if (enum? raw-op) (dispatch! raw-op) (raise "|Expected Enum operation")
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
+          :schema $ quote $ Fn (-> Unit)
         'repeat! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn repeat! (duration cb)
             browser/set-timeout!
@@ -362,10 +337,9 @@
               * duration 1000
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'Number $ :: 'Fn
-              {} (:return 'Unit)
-                :args $ []
+          :schema $ quote $ Fn Number
+            Fn $ -> Unit
+            -> Unit
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns calcit-theme.main
           :require
@@ -385,12 +359,12 @@
         'Op $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defenum Op (:states 'Dynamic 'Dynamic) (:content 'String) (:hydrate-storage 'calcit-theme.types/StoreData)
           :examples $ []
-          :schema $ :: 'Enum
+          :schema $ quote Enum
         'store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def store
             calcit-theme.types/StoreData :states ({}) :content |
           :examples $ []
-          :schema $ :: 'calcit-theme.types/StoreData
+          :schema $ quote calcit-theme.types/StoreData
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns calcit-theme.schema
     'calcit-theme.theme $ %{} 'FileEntry
@@ -403,8 +377,7 @@
               inline? $ {} (:display :inline-block) (:border-width "|0 0 1px 0px") (:padding "|2px 4px") (:margin-bottom 0)
               true $ {}
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
-            :args $ [] 'Bool 'Bool 'Bool
+          :schema $ quote $ Fn Bool Bool Bool (-> Dynamic)
         'decorate-leaf $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn decorate-leaf (text leading?)
             cond
@@ -427,16 +400,14 @@
               leading? $ {} $ :color (hsl 40 85 60)
               true $ {}
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'String 'Bool
-            :return $ :: 'Map 'Tag 'String
+          :schema $ quote $ Fn String Bool
+            -> $ Map Tag String
         'expr-simple? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn expr-simple? (expr)
             and (every? expr string?)
               < (expr .len) 6
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Bool)
-            :args $ [] $ :: 'List 'Tag
+          :schema $ quote $ Fn (List Tag) (-> Bool)
         'number-prefix? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn number-prefix? (text)
             let
@@ -449,8 +420,7 @@
               and (not= digit |)
                 (str-find-index |0123456789 digit) .some?
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Bool)
-            :args $ [] 'String
+          :schema $ quote $ Fn String (-> Bool)
           :tests $ [] $ %{} 'TestEntry (:name |recognizes-decimal-prefix)
             :code $ quote $ do
               is= true $ number-prefix? |7foo
@@ -467,14 +437,14 @@
               :min-width |8px
               :user-select |none
           :examples $ []
-          :schema $ :: 'Map 'Tag 'String
+          :schema $ quote $ Map Tag String
         'style-leaf $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def style-leaf
             {} (:display |inline-block) (:vertical-align |top) (:font-family ui/font-code) (:margin "|0 4px") (:padding "|0 4px")
               :color $ hsl 200 14 60
               :border-radius |4px
           :examples $ []
-          :schema $ :: 'Map 'Tag 'String
+          :schema $ quote $ Map Tag String
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns calcit-theme.theme
           :require (respo-ui.core :as ui)
@@ -485,7 +455,7 @@
         'StoreData $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct StoreData (:states 'Map) (:content 'String)
           :examples $ []
-          :schema $ :: 'StructDef
+          :schema $ quote StructDef
         'restore-store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn restore-store (data)
             if (struct? data)
@@ -501,9 +471,7 @@
                     raise "|Expected Theme StoreData"
               decode-map-as data 'calcit-theme.types/StoreData
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'calcit-theme.types/StoreData)
-            :args $ [] 'T
-            :generics $ [] 'T
+          :schema $ quote $ Fn T (-> calcit-theme.types/StoreData) (:generics T)
           :tests $ [] $ %{} 'TestEntry (:name |legacy-map-and-store-roundtrip)
             :code $ quote $ let
                 legacy $ {}
@@ -541,8 +509,7 @@
               (:hydrate-storage d) (calcit-theme.types/restore-store d)
               _ $ do (eprintln "|unknown op:" op) store
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'calcit-theme.types/StoreData)
-            :args $ [] 'calcit-theme.types/StoreData 'Enum 'String 'Number
+          :schema $ quote $ Fn calcit-theme.types/StoreData Enum String Number (-> calcit-theme.types/StoreData)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns calcit-theme.updater
           :require $ respo.cursor :refer $ update-state-tree
