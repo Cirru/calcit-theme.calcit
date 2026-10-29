@@ -8,13 +8,13 @@ CLI / `@calcit/procs` 配对正式 **0.32.1**；消费者必须更新完整模�
 
 配套已发布 Respo 0.17.1、UI 0.9.0、JS FFI 0.2.9、Reel 0.7.0-alpha.5，传递 Router 0.9.0-alpha.4。Reel/Router 仍含 alpha，不宣称整图均为正式版。当前静态验收使用此前经 Caps 验证的发布源码副本，fresh Caps 解析、最新远端 main 和 CI 仍待复核；不用 main/hash 代替正式标签。
 
-官方 formatter 迁移类型存储写法，36 个原定义的 schema、原测试及运行逻辑保持；高亮样式、嵌套表达式布局、hover/active、三个既有 DOM unsafe 边界和 HUD 不变。两个公开样式值继续为真实 `Map<Tag,String>`，不改主题 CSS。不添加强转、预算豁免、验证脚本或测试框架。
+官方 formatter 迁移类型存储写法，36 个原定义的 schema、原测试及运行逻辑保持；高亮样式、嵌套表达式布局、hover/active 和 HUD 保持；三个既有 DOM unsafe 边界改用 `js-cast` 检查声明的顶层成员存在、方法可调用，缺少成员会在入口更早报错。两个公开样式值继续为真实 `Map<Tag,String>`，不改主题 CSS。不添加 unsafe 强转、预算豁免、验证脚本或测试框架。
 
 ## 存档与类型边界
 
 Demo 启动先恢复存档，再首次渲染和注册 beforeunload / 60 秒保存。恢复失败时停止，避免初始状态覆盖原值；不清空存档，不补业务默认值。旧 Map 经过字段校验，无来源的序列化 Struct 经受检 wire 解码重建本地 StoreData，不用名称替代名义身份；本地 Store 保留原对象。正常刷新不能代替所有坏存档保留性验收。
 
-开放 Reel/UI/存储边界保留实际 Enum、List、Map 和 nominal 检查，未知 Enum 仍走原警告分支；不把异构数据伪装为同质容器。质量基线没有放宽，unsafe 上限仍为 3，不声称已经清零。
+开放 Reel/UI/存储边界保留实际 Enum、List、Map 和 nominal 检查，未知 Enum 仍走原警告分支；不把异构数据伪装为同质容器。quality 门禁仅把三处 unsafe 预算及总上限收紧为 0，其他逐定义和全局预算保持；`js-cast` 不等于深层值或 nominal 身份校验。
 
 ## 开发与验证
 
@@ -33,7 +33,7 @@ yarn vite build --base=./
 node --test scripts/regression.test.mjs
 ```
 
-本轮本地 215 个定义、36 个公开定义、完整 strict（passed 且 diagnostics 为空）、原两项附带测试、原三项 Node 渲染/状态/FFI 回归、immutable 与构建通过；原质量基线通过，所有 delta 为 0。0.32.1 的浏览器交互尚未复验。此前 0.32.0 候选验过嵌套表达式、高亮切换及正常刷新，不代替本轮验收；坏存档、HMR 和定时保存也不作本轮通过声明。
+本轮本地 215 个定义、36 个公开定义、完整 strict（passed 且 diagnostics 为空）、原两项附带测试、现有三项 Node 渲染/状态/FFI 回归、immutable 与构建通过；回归中补验 active 增删及冒泡隔离、缺少注册方法的拒绝。unsafe 3→0，收紧后的质量基线通过，其他指标不变。0.32.1 的浏览器交互尚未复验。此前 0.32.0 候选验过嵌套表达式、高亮切换及正常刷新，不代替本轮验收；坏存档、HMR 和定时保存也不作本轮通过声明。
 
 本地预览先运行 `calcit js`，再运行 `yarn vite --host 127.0.0.1`。刷新会经过原保存/恢复流程。
 

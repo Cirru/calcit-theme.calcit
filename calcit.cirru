@@ -182,7 +182,7 @@
         'handle-active-event! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn handle-active-event! (e active?)
             let
-                event $ unsafe-coerce
+                event $ js-cast
                     get e :event
                     , .unwrap
                   , HighlightEventHost
@@ -198,7 +198,7 @@
         'handle-hover! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn handle-hover! (*highlight event)
             let
-                t $ unsafe-coerce (.-target event) HighlightElementHost
+                t $ js-cast (.-target event) HighlightElementHost
               when
                 = |DIV $ .-tag-name t
                 if
@@ -216,7 +216,7 @@
             , calcit-theme.comp.expr/HighlightEventHost (-> Unit) (:features :js-ffi)
         'register-hover! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn register-hover! (el *highlight)
-            .add-event-listener! (unsafe-coerce el HighlightElementHost) |mouseover $ fn (event) (handle-hover! *highlight event)
+            .add-event-listener! (js-cast el HighlightElementHost) |mouseover $ fn (event) (handle-hover! *highlight event)
           :examples $ []
           :schema $ quote $ Fn Dynamic
             Ref $ calcit.core/Option calcit-theme.comp.expr/HighlightElementHost

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import * as clt from '../js-out/calcit.core.mjs';
 import * as browser from '../js-out/js-ffi.browser.mjs';
-import { render_expr, effect_highlight } from '../js-out/calcit-theme.comp.expr.mjs';
+import { render_expr, effect_highlight, handle_active_event_$x_ } from '../js-out/calcit-theme.comp.expr.mjs';
 import { effect_args, effect_method } from '../js-out/respo.util.detect.mjs';
 import { comp_container } from '../js-out/calcit-theme.comp.container.mjs';
 import { reel } from '../js-out/reel.schema.mjs';
@@ -11,7 +11,7 @@ import { updater } from '../js-out/calcit-theme.updater.mjs';
 import { restore_store } from '../js-out/calcit-theme.types.mjs';
 import { make_string } from '../js-out/respo.render.html.mjs';
 
-const t = clt.init_tags(['states', 'viewer', 'data', 'content', 'some', 'none', 'store', 'mount']);
+const t = clt.init_tags(['states', 'viewer', 'data', 'content', 'some', 'none', 'store', 'mount', 'event']);
 const map = clt._$n__$M_;
 const list = clt._$L_;
 const field = (v, k) => clt.option_$o_unwrap(clt.get(v, k));
@@ -38,6 +38,14 @@ test('public renderer handles nested expressions and empty expressions', () => {
   assert.equal(second.classes.has('on-hover'), true);
   hover({ target: element('SPAN') });
   assert.equal(second.classes.has('on-hover'), true);
+  const nativeEvent = { target: first, currentTarget: first };
+  handle_active_event_$x_(map(t.event, nativeEvent), true);
+  assert.equal(first.classes.has('on-active'), true);
+  handle_active_event_$x_(map(t.event, nativeEvent), false);
+  assert.equal(first.classes.has('on-active'), false);
+  handle_active_event_$x_(map(t.event, { target: first, currentTarget: second }), true);
+  assert.equal(first.classes.has('on-active'), false);
+  assert.throws(() => effect_method(effect)(effect_args(effect), list(t.mount, { tagName: 'DIV', classList: {} }, true)), /js-cast .*addEventListener/);
 });
 
 test('typed state and content operations preserve one state tree', () => {
