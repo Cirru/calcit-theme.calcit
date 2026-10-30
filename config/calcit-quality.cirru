@@ -26,7 +26,7 @@
       :typeNone 0
       :typeNotFull 1
       :unresolved 0
-      :unsafeCoerce 1
+      :unsafeCoerce 0
     |calcit-theme.comp.expr/handle-hover! $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -35,7 +35,7 @@
       :typeNone 0
       :typeNotFull 0
       :unresolved 0
-      :unsafeCoerce 1
+      :unsafeCoerce 0
     |calcit-theme.comp.expr/register-hover! $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -44,7 +44,7 @@
       :typeNone 0
       :typeNotFull 1
       :unresolved 0
-      :unsafeCoerce 1
+      :unsafeCoerce 0
     |calcit-theme.comp.expr/render-expr $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -125,7 +125,7 @@
     :typeNone 0
     :typeNotFull 7
     :unresolved 6
-    :unsafeCoerce 3
+    :unsafeCoerce 0
   :scope $ {} (:includeDependencies false)
     :namespace nil
     :namespacePrefix nil
