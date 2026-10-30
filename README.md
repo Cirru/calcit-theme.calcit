@@ -6,7 +6,7 @@ Calcit JS 项目的 Cirru 语法高亮主题，从 ClojureScript 版本移植。
 
 CLI / `@calcit/procs` 配对正式 **0.32.1**；消费者必须更新完整模块图并重新生成 JS，旧 0.30 消费者继续使用原维护线。本候选没有发布 0.4.12 tag，不要把源码版本号当作已发布依赖。
 
-配套已发布 Respo 0.17.1、UI 0.9.0、JS FFI 0.2.9、Reel 0.7.0-alpha.5，传递 Router 0.9.0-alpha.4。Reel/Router 仍含 alpha，不宣称整图均为正式版。当前静态验收使用此前经 Caps 验证的发布源码副本，fresh Caps 解析、最新远端 main 和 CI 仍待复核；不用 main/hash 代替正式标签。
+配套已发布 Respo 0.17.1、UI 0.9.0、JS FFI 0.2.9、Reel 0.7.0-alpha.5，传递 Router 0.9.0-alpha.4。Reel/Router 仍含 alpha，不宣称整图均为正式版。已用真实 Caps strict 解析发布模块并通过 toolchain 校验，源码与本地测试使用的不可变版本一致。最新 main 未变化且无重复迁移 PR，远端 CI 仍待验收；不用 main/hash 代替正式标签。
 
 官方 formatter 迁移类型存储写法，36 个原定义的 schema、原测试及运行逻辑保持；高亮样式、嵌套表达式布局、hover/active 和 HUD 保持；三个既有 DOM unsafe 边界改用 `js-cast` 检查声明的顶层成员存在、方法可调用，缺少成员会在入口更早报错。两个公开样式值继续为真实 `Map<Tag,String>`，不改主题 CSS。不添加 unsafe 强转、预算豁免、验证脚本或测试框架。
 
@@ -33,7 +33,7 @@ yarn vite build --base=./
 node --test scripts/regression.test.mjs
 ```
 
-本轮本地 215 个定义、36 个公开定义、完整 strict（passed 且 diagnostics 为空）、原两项附带测试、现有三项 Node 渲染/状态/FFI 回归、immutable 与构建通过；回归中补验 active 增删及冒泡隔离、缺少注册方法的拒绝。unsafe 3→0，收紧后的质量基线通过，其他指标不变。0.32.1 的浏览器交互尚未复验。此前 0.32.0 候选验过嵌套表达式、高亮切换及正常刷新，不代替本轮验收；坏存档、HMR 和定时保存也不作本轮通过声明。
+本轮本地 215 个定义、36 个公开定义、完整 strict（passed 且 diagnostics 为空）、原两项附带测试、现有三项 Node 渲染/状态/FFI 回归、immutable 与构建通过；回归中补验 active 增删及冒泡隔离、缺少注册方法的拒绝。unsafe 3→0，收紧后的质量基线通过，其他指标不变。本轮 0.32.1 实际页面已验证默认嵌套表达式、真实指针跨节点高亮切换和刷新，控制台无 warn/error；active 增删和冒泡隔离由现有 Node 回归覆盖，不冒充实际按住鼠标时的视觉验收。坏存档、HMR 和定时保存未复验。
 
 本地预览先运行 `calcit js`，再运行 `yarn vite --host 127.0.0.1`。刷新会经过原保存/恢复流程。
 
