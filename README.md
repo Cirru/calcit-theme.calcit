@@ -4,38 +4,13 @@ Calcit JS 项目的 Cirru 语法高亮主题，从 ClojureScript 版本移植。
 
 ## 0.5.1 候选：使用者影响
 
-CLI / `@calcit/procs` 继续配对正式 **0.34.2**。相对已发布 0.5.0，本次仅将
-`calcit-theme.schema/Op` 定义自身的元数据 `Enum` 纠正为 `EnumDef`。官方 program-diff
-确认运行代码、原测试、示例和其他定义保持；依赖图与原质量基线不变。
-本地完整 strict、原三项 native、三项 Node 回归与构建通过，精确 CI 仍需验收。
+候选 `0.5.1` 使用正式 Calcit CLI / `@calcit/procs` **0.34.2**，对齐 Reel **0.9.0**、UI **0.14.1**、Respo **0.19.2**、JS-FFI **0.2.10** 与传递 Router **0.11.2**。全部模块均从正式 tag 经 Caps strict 安装并通过 toolchain 校验；0.5.1 尚未发布。
 
-此前 0.5.0 建立的公开合同保持：公开 `render-expr` / `comp-expr` 的树参数
-收紧为 `List<calcit-theme.schema/CirruNode>`，其中 `CirruNode = String | List<CirruNode>`。
-数值、Bool、nil 字面量仍是源文本 String，不能把运行时 Number/Bool/nil 当作节点。
-持有 `List<Dynamic>` 的调用方需先按这个递归模型解码；非法嵌套值会在边界更早报错。
-原高亮、空表达式、嵌套布局、hover/active、CSS 值和 HUD 保持。
+新版 Respo 的事件为名义 `RespoEvent`。Theme 鼠标 active 入口改用该具体类型，直接读取事件字段；两个 handler 同步声明真实回调合同，保留受检宿主适配和 target/currentTarget 相等检查。调用这个辅助入口的外部代码需传新版事件，不再传旧 Map。Demo 使用 `render-with!`，将组件构建和实际 DOM 渲染放在同一 managed frame；Reel 保留异构数据 key，只在渲染边界适配 CoordKey。原 Node 回归只调整 RespoEvent / EffectParams 夹具，原三项测试及断言保留。
 
-`decorate-expr` 的返回类型为 `Map<Tag,ExprStyleValue>`，值闭合为 String / Number / Tag；
-没有将任意调用方样式假装成同质 Map。内部 child pair 的元素 union 只描述 Number 和
-Component，不替代固定位置构造的事实，也不使用 unsafe 强转。
-Demo 的旧 Reel `read-field` 改为必需字段读取，再保留本地 StoreData 身份检查；
-缺少 store 仍拒绝，诊断来自必需字段检查。可选调试面板改用显式 Option，未显示时不插入占位节点。
+前一已合并 PR 将 `calcit-theme.schema/Op` 定义自身的 `Enum` 元数据纠正为 `EnumDef`，运行值和 union 未变。本次继续保留 0.5.0 的公开树合同：`render-expr` / `comp-expr` 接收 `List<CirruNode>`，`CirruNode = String | List<CirruNode>`。数值、Bool、nil 字面量是源文本 String，运行时 Number/Bool/nil 不能直接作为节点。`decorate-expr` 的样式值 union 保持 String / Number / Tag；不使用 unsafe 或同质容器假装开放数据已受检。公开 CirruQuote 列表返回合同仍由 calcit-lang/calcit#2556 跟踪。
 
-完整依赖图为 Reel **0.8.1**、UI **0.12.1**、Respo **0.18.1**、JS-FFI **0.2.9**，
-传递 Router **0.10.1**。这是保留旧 Map 事件/坐标的兼容维护图，不能与 Respo 0.19 图混装；
-直接消费 Respo `show` 且省略 fallback 的代码需接收 Option。上述五个模块均已正式发布，
-已另外用 Caps strict 从正式 tag 安装完整图并通过 toolchain 校验，不再使用本地模块链接。
-本轮 PR 仍执行隔离前端预览；0.5.0 已发布，0.5.1 尚未发布。Error Viewer 的实际组件已在明确的本地候选图中通过列表/叶根、中文/emoji、空树和嵌套源码渲染，并保留原三个回归；仍待正式发布图与页面验收，不能把版本字段当作已发布依赖。公开 CirruQuote 列表返回合同的上游收敛见 calcit-lang/calcit#2556。
-
-0.5.0 迁移时的源码预检：222 个全部定义、40 个公开定义、完整 strict、原两项与新增递归边界测试
-（native / JS 各 3 项）、原 3 项 Node 渲染/状态/FFI 回归、immutable 与构建通过。
-未新增检查脚本或测试框架。先以原质量基线完整验收通过，再仅收紧上述三个定义与总量中已消除债务的预算，
-其他定义预算保持，没有放宽任何门禁；同一 0.34.2 工具链下
-schemaDynamic 4→2、unresolved 6→2、typeNotFull 7→4、codeNil 2→0、unsafe 仍为 0。
-这些计数不展开已有 Struct 字段，开放存储/宿主边界仍存在，不宣称 Dynamic 清零。
-公开组件的内存夹具已验证中文、空表达式、嵌套渲染及真实指针跨节点高亮，控制台无警告/错误；
-未运行 Demo 的存档/定时保存流程。正式已发布图已重做全部定义、完整 strict、原三项 native 测试、原质量门禁、
-原三项 Node 回归和构建；本次精确提交的远端完整 CI 与评审仍待验收。
+本地全部 226 个可达定义、40 个公开定义、完整 strict、原 native 3/3、原 Node 3/3、文档和构建通过；dynamic-method / deprecated 为零。原质量基线原样通过，unsafe 为 0、typeNotFull 4→3，其他预算未放宽。实际 Chrome 的默认嵌套源码、真实指针跨表达式 hover 切换与刷新正常；通过 DOM mousedown/mouseup 验证 active 增删及不误激活父节点。首次加载仅有原 favicon.ico 404，没有新的应用错误；不把 DOM 事件回放宣称为按住鼠标的视觉验收。未重做坏存档或 60 秒保存验收，原恢复顺序未改。精确 Linux CI 与评审以本 PR 为准。
 
 ## 存档与类型边界
 

@@ -10,11 +10,18 @@ import { store, Op } from '../js-out/calcit-theme.schema.mjs';
 import { updater } from '../js-out/calcit-theme.updater.mjs';
 import { restore_store } from '../js-out/calcit-theme.types.mjs';
 import { make_string } from '../js-out/respo.render.html.mjs';
+import { EffectParams, RespoEvent } from '../js-out/respo.schema.mjs';
 
 const t = clt.init_tags(['states', 'viewer', 'data', 'content', 'some', 'none', 'store', 'mount', 'event']);
 const map = clt._$n__$M_;
 const list = clt._$L_;
 const field = (v, k) => clt.option_$o_unwrap(clt.get(v, k));
+const effectParams = target => clt._$n__PCT__$M_(EffectParams,
+  clt.newTag('action'), t.mount, clt.newTag('target'), target, clt.newTag('at-place?'), true);
+const respoEvent = event => clt._$n__PCT__$M_(RespoEvent,
+  ...RespoEvent.fields.flatMap(tag => [tag,
+    tag.value === 'type' ? clt.newTag('mousedown')
+      : tag.value === 'event' || tag.value === 'original-event' ? event : null]));
 
 test('public renderer handles nested expressions and empty expressions', () => {
   const html = make_string(render_expr(list('defn', 'main!', list(), list('println', '|hello'))));
@@ -25,7 +32,7 @@ test('public renderer handles nested expressions and empty expressions', () => {
   let hover;
   const root = { tagName: 'DIV', classList: { add() {}, remove() {} }, addEventListener(name, callback) { assert.equal(name, 'mouseover'); hover = callback; } };
   const effect = effect_highlight(true);
-  effect_method(effect)(effect_args(effect), list(t.mount, root, true));
+  effect_method(effect)(effect_args(effect), effectParams(root));
   const element = tagName => {
     const classes = new Set();
     return { tagName, classes, addEventListener() {}, classList: { add: name => { classes.add(name); }, remove: name => { classes.delete(name); } } };
@@ -39,13 +46,13 @@ test('public renderer handles nested expressions and empty expressions', () => {
   hover({ target: element('SPAN') });
   assert.equal(second.classes.has('on-hover'), true);
   const nativeEvent = { target: first, currentTarget: first };
-  handle_active_event_$x_(map(t.event, nativeEvent), true);
+  handle_active_event_$x_(respoEvent(nativeEvent), true);
   assert.equal(first.classes.has('on-active'), true);
-  handle_active_event_$x_(map(t.event, nativeEvent), false);
+  handle_active_event_$x_(respoEvent(nativeEvent), false);
   assert.equal(first.classes.has('on-active'), false);
-  handle_active_event_$x_(map(t.event, { target: first, currentTarget: second }), true);
+  handle_active_event_$x_(respoEvent({ target: first, currentTarget: second }), true);
   assert.equal(first.classes.has('on-active'), false);
-  assert.throws(() => effect_method(effect)(effect_args(effect), list(t.mount, { tagName: 'DIV', classList: {} }, true)), /js-cast .*addEventListener/);
+  assert.throws(() => effect_method(effect)(effect_args(effect), effectParams({ tagName: 'DIV', classList: {} })), /js-cast .*addEventListener/);
 });
 
 test('typed state and content operations preserve one state tree', () => {
