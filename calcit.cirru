@@ -95,8 +95,18 @@
               list->
                 {} (:class-name css-expr)
                   :style $ theme/decorate-expr tailing? inline? root?
-                  :on-mousedown $ fn (e d!) (handle-active-event! e true)
-                  :on-mouseup $ fn (e d!) (handle-active-event! e false)
+                  :on-mousedown $ fn (e d!)
+                    hint-fn $ Fn respo.schema/RespoEvent
+                      Fn *dispatch-op $ -> Unit
+                      -> Unit
+                      :features :js-ffi
+                    handle-active-event! e true
+                  :on-mouseup $ fn (e d!)
+                    hint-fn $ Fn respo.schema/RespoEvent
+                      Fn *dispatch-op $ -> Unit
+                      -> Unit
+                      :features :js-ffi
+                    handle-active-event! e false
                 loop
                     acc $ []
                     xs expr
@@ -185,10 +195,7 @@
         'handle-active-event! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn handle-active-event! (e active?)
             let
-                event $ js-cast
-                    get e :event
-                    , .unwrap
-                  , HighlightEventHost
+                event $ js-cast (:event e) HighlightEventHost
                 target $ .-target event
               if
                 identical? target $ .-current-target event
@@ -197,7 +204,7 @@
                   .remove! (.-class-list target) |on-active
               , &unit
           :examples $ []
-          :schema $ quote $ Fn Dynamic Bool (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn respo.schema/RespoEvent Bool (-> Unit) (:features :js-ffi)
         'handle-hover! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn handle-hover! (*highlight event)
             let
@@ -335,7 +342,8 @@
           :schema $ quote $ Fn (-> Unit)
         'render-app! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-app! ()
-            render! (mount-target) (comp-container @*reel)
+            render-with! (mount-target)
+              fn () $ comp-container @*reel
               fn (raw-op)
                 hint-fn $ Fn calcit-theme.schema/Op $ -> Unit
                 if (enum? raw-op) (dispatch! raw-op) (raise "|Expected Enum operation")
@@ -354,7 +362,7 @@
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns calcit-theme.main
           :require
-            respo.core :refer $ render! clear-cache! realize-ssr!
+            respo.core :refer $ render-with! clear-cache! realize-ssr!
             calcit-theme.comp.container :refer $ comp-container
             calcit-theme.updater :refer $ updater
             calcit-theme.schema :as schema
