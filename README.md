@@ -18,8 +18,8 @@ Demo 的旧 Reel `read-field` 改为必需字段读取，再保留本地 StoreDa
 
 候选完整依赖图为 Reel **0.8.1**、UI **0.11.1**、Respo **0.18.1**、JS-FFI **0.2.9**，
 传递 Router **0.9.1**。这是保留旧 Map 事件/坐标的兼容维护图，不能与 Respo 0.19 图混装；
-直接消费 Respo `show` 且省略 fallback 的代码需接收 Option。Router 0.9.1 已正式发布，
-UI/Reel 尚在独立维护候选阶段；当前本地链接只证明源码预检，不是正式 Caps 安装验收。
+直接消费 Respo `show` 且省略 fallback 的代码需接收 Option。上述五个模块均已正式发布，
+已另外用 Caps strict 从正式 tag 安装完整图并通过 toolchain 校验，不再使用本地模块链接。
 本轮未创建 Theme PR、发布 tag 或部署，不能把版本字段当作已发布依赖。
 
 本地源码预检：222 个全部定义、40 个公开定义、完整 strict、原两项与新增递归边界测试
@@ -28,7 +28,8 @@ UI/Reel 尚在独立维护候选阶段；当前本地链接只证明源码预检
 schemaDynamic 4→2、unresolved 6→2、typeNotFull 7→4、codeNil 2→0、unsafe 仍为 0。
 这些计数不展开已有 Struct 字段，开放存储/宿主边界仍存在，不宣称 Dynamic 清零。
 公开组件的内存夹具已验证中文、空表达式、嵌套渲染及真实指针跨节点高亮，控制台无警告/错误；
-未运行 Demo 的存档/定时保存流程。正式已发布图与远端完整 CI 尚待完成。
+未运行 Demo 的存档/定时保存流程。正式已发布图已重做全部定义、完整 strict、原三项 native 测试、原质量门禁、
+原三项 Node 回归和构建；远端完整 CI 与评审仍待验收。
 
 ## 存档与类型边界
 
