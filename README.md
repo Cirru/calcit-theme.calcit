@@ -20,7 +20,7 @@ Demo 的旧 Reel `read-field` 改为必需字段读取，再保留本地 StoreDa
 传递 Router **0.9.1**。这是保留旧 Map 事件/坐标的兼容维护图，不能与 Respo 0.19 图混装；
 直接消费 Respo `show` 且省略 fallback 的代码需接收 Option。上述五个模块均已正式发布，
 已另外用 Caps strict 从正式 tag 安装完整图并通过 toolchain 校验，不再使用本地模块链接。
-本轮未创建 Theme PR、发布 tag 或部署，不能把版本字段当作已发布依赖。
+本轮仅提交迁移 PR 与隔离前端预览，不发布 tag 或部署生产；不能把版本字段当作已发布依赖。
 
 本地源码预检：222 个全部定义、40 个公开定义、完整 strict、原两项与新增递归边界测试
 （native / JS 各 3 项）、原 3 项 Node 渲染/状态/FFI 回归、immutable 与构建通过。
