@@ -2,11 +2,11 @@
 
 Calcit JS 项目的 Cirru 语法高亮主题，从 ClojureScript 版本移植。
 
-## 0.5.1 候选：使用者影响
+## 0.6.0 候选：使用者影响
 
-候选 `0.5.1` 使用正式 Calcit CLI / `@calcit/procs` **0.34.2**，对齐 Reel **0.9.0**、UI **0.14.1**、Respo **0.19.2**、JS-FFI **0.2.10** 与传递 Router **0.11.2**。全部模块均从正式 tag 经 Caps strict 安装并通过 toolchain 校验；0.5.1 尚未发布。
+候选 `0.6.0` 使用正式 Calcit CLI / `@calcit/procs` **0.34.2**，对齐 Reel **0.9.0**、UI **0.14.1**、Respo **0.19.2**、JS-FFI **0.2.10** 与传递 Router **0.11.2**。全部模块均从正式 tag 经 Caps strict 安装并通过 toolchain 校验；0.6.0 尚未发布。
 
-新版 Respo 的事件为名义 `RespoEvent`。Theme 鼠标 active 入口改用该具体类型，直接读取事件字段；两个 handler 同步声明真实回调合同，保留受检宿主适配和 target/currentTarget 相等检查。调用这个辅助入口的外部代码需传新版事件，不再传旧 Map。Demo 使用 `render-with!`，将组件构建和实际 DOM 渲染放在同一 managed frame；Reel 保留异构数据 key，只在渲染边界适配 CoordKey。原 Node 回归只调整 RespoEvent / EffectParams 夹具，原三项测试及断言保留。
+新版 Respo 的事件为名义 `RespoEvent`。Theme 鼠标 active 入口改用该具体类型，直接读取事件字段；两个 handler 同步声明真实回调合同，保留受检宿主适配和 target/currentTarget 相等检查。调用这个辅助入口的外部代码需传新版事件，不再传旧 Map；因此使用新的 minor 0.6.0，不将此依赖与事件合同变化包装为纯 patch。Demo 使用 `render-with!`，将组件构建和实际 DOM 渲染放在同一 managed frame；Reel 保留异构数据 key，只在渲染边界适配 CoordKey。原 Node 回归只调整 RespoEvent / EffectParams 夹具，原三项测试及断言保留。
 
 前一已合并 PR 将 `calcit-theme.schema/Op` 定义自身的 `Enum` 元数据纠正为 `EnumDef`，运行值和 union 未变。本次继续保留 0.5.0 的公开树合同：`render-expr` / `comp-expr` 接收 `List<CirruNode>`，`CirruNode = String | List<CirruNode>`。数值、Bool、nil 字面量是源文本 String，运行时 Number/Bool/nil 不能直接作为节点。`decorate-expr` 的样式值 union 保持 String / Number / Tag；不使用 unsafe 或同质容器假装开放数据已受检。公开 CirruQuote 列表返回合同仍由 calcit-lang/calcit#2556 跟踪。
 
