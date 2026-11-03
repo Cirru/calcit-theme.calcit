@@ -394,7 +394,7 @@
         'Op $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defenum Op (:states Dynamic Dynamic) (:content String) (:hydrate-storage calcit-theme.types/StoreData)
           :examples $ []
-          :schema $ quote Enum
+          :schema $ quote EnumDef
         'store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def store
             calcit-theme.types/StoreData :states ({}) :content |
