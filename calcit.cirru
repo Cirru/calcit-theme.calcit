@@ -14,17 +14,21 @@
           :code $ quote $ defcomp comp-container (reel)
             let
                 store $ let
-                    raw-store $ reel-schema/read-field reel :store
+                    raw-store $ reel-schema/require-field reel :store
                   if (struct? raw-store)
                     struct-match raw-store (calcit-theme.types/StoreData checked checked)
                       _ _ $ raise "|Expected Theme StoreData"
                     raise "|Expected Theme StoreData"
                 states $ :states store
-                data $ parse-cirru-list $ slurp |examples/demo.cirru
+                data $ decode-map-as
+                  parse-cirru-list $ slurp |examples/demo.cirru
+                  quote $ List calcit-theme.schema/CirruNode
               div
                 {} $ :class-name css-body
                 render-expr data
-                when dev? $ comp-reel (>> states :reel) reel $ {}
+                if dev?
+                  Option :some $ comp-reel (>> states :reel) reel $ {}
+                  Option :none
           :examples $ []
           :schema $ quote $ Fn (Map Tag Dynamic) (-> respo.schema/Component)
         'css-body $ %{} 'CodeEntry (:doc |)
@@ -63,6 +67,10 @@
           :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
             :names $ {} (:add! |add) (:remove! |remove)
           :schema $ quote Trait
+        'ExpressionChildPart $ %{} 'CodeEntry (:doc "|渲染列表 pair 的元素种类；不表示任意 List 都满足固定二元位置合同。")
+          :code $ quote $ defunion ExpressionChildPart Number respo.schema/Component
+          :examples $ []
+          :schema $ quote UnionDef
         'HighlightElementHost $ %{} 'CodeEntry
           :doc "|DOM element surface used by the hover highlighter."
           :code $ quote $ deftrait HighlightElementHost (:tag-name 'String) (:class-list 'calcit-theme.comp.expr/DomTokenListHost)
@@ -95,56 +103,51 @@
                     idx 0
                     prev-kind :leaf
                   hint-fn $ Fn
-                    List $ List Dynamic
-                    List Dynamic
+                    List $ List calcit-theme.comp.expr/ExpressionChildPart
+                    List calcit-theme.schema/CirruNode
                     , Number Tag $ ->
-                      List $ List Dynamic
-                  let
-                      head $
-                        first xs
-                        , .unwrap-or nil
-                    cond
-                        empty? xs
-                        , acc
-                      (string? head)
-                        recur
-                          conj acc $ [] idx $ comp-leaf head (&= 0 idx)
-                          rest xs
-                          inc idx
-                          , :leaf
-                      (list? head)
-                        if
-                          and
-                            = 1 $ head .len
-                            string? $
-                              first head
-                              , .unwrap-or nil
+                      List $ List calcit-theme.comp.expr/ExpressionChildPart
+                  match (destruct-list xs)
+                    (:none) acc
+                    (:some head tail)
+                      match head
+                        (String head)
                           recur
-                            conj acc $ [] idx $ comp-expr head false false true
-                            rest xs
-                            inc idx
-                            , :leaf
-                          let
-                              cursor head
-                              size $ cursor .len
-                              simple? $ every? cursor string?
-                              layout-kind $ if simple?
-                                match prev-kind
-                                  :leaf $ if (> size 6) :expr :inline-expr
-                                  :inline-expr $ if (> size 2) :expr :inline-expr
-                                  :expr :expr
-                                  _ $ raise "|Unexpected layout kind"
-                                , :expr
+                            conj acc $ assert-type
+                              [] idx $ comp-leaf head $ &= 0 idx
+                              quote $ List calcit-theme.comp.expr/ExpressionChildPart
+                            , tail (inc idx) :leaf
+                        (List children)
+                          if
+                            and
+                              = 1 $ .len children
+                              match (first children)
+                                (:some first-child) (calcit-theme.comp.expr/token-node? first-child)
+                                (:none) false
                             recur
-                              conj acc $ [] idx $ comp-expr cursor
-                                = (inc idx) (expr .len)
-                                , false (= layout-kind :inline-expr)
-                              rest xs
-                              inc idx
-                              , layout-kind
-                      true $ raise "|Expected a Cirru string or expression"
+                              conj acc $ assert-type
+                                [] idx $ comp-expr children false false true
+                                quote $ List calcit-theme.comp.expr/ExpressionChildPart
+                              , tail (inc idx) :leaf
+                            let
+                                size $ .len children
+                                simple? $ every? children calcit-theme.comp.expr/token-node?
+                                layout-kind $ if simple?
+                                  match prev-kind
+                                    :leaf $ if (> size 6) :expr :inline-expr
+                                    :inline-expr $ if (> size 2) :expr :inline-expr
+                                    :expr :expr
+                                    _ $ raise "|Unexpected layout kind"
+                                  , :expr
+                              recur
+                                conj acc $ assert-type
+                                  [] idx $ comp-expr children
+                                    = (inc idx) (.len expr)
+                                    , false $ = layout-kind :inline-expr
+                                  quote $ List calcit-theme.comp.expr/ExpressionChildPart
+                                , tail (inc idx) layout-kind
           :examples $ []
-          :schema $ quote $ Fn (List Dynamic) Bool Bool Bool (-> respo.schema/Component) (:features :js-ffi)
+          :schema $ quote $ Fn (List calcit-theme.schema/CirruNode) Bool Bool Bool (-> respo.schema/Component) (:features :js-ffi)
         'comp-leaf $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-leaf (x head?)
             assert "|string for leaf" $ string? x
@@ -225,7 +228,14 @@
         'render-expr $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-expr (data) (comp-expr data false true false)
           :examples $ []
-          :schema $ quote $ Fn (List Dynamic) (-> respo.schema/Component)
+          :schema $ quote $ Fn (List calcit-theme.schema/CirruNode) (-> respo.schema/Component)
+        'token-node? $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn token-node? (node)
+            match node
+              (String _token) true
+              (List _children) false
+          :examples $ []
+          :schema $ quote $ Fn calcit-theme.schema/CirruNode (-> Bool)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns calcit-theme.comp.expr
           :require
@@ -315,7 +325,8 @@
             if (nil? build-errors)
               do (clear-cache!) (remove-watch! *reel :changes)
                 add-watch! *reel :changes $ fn (_reel _prev) (render-app!) &unit
-                reset! *reel $ decode-map-as (refresh-reel @*reel schema/store updater) (:: 'Map 'Tag 'Dynamic)
+                reset! *reel $ decode-map-as (refresh-reel @*reel schema/store updater)
+                  quote $ Map Tag Dynamic
                 println "|Code updated."
                 hud! |ok~ |Ok
               hud! |error build-errors
@@ -356,8 +367,32 @@
             js-ffi.browser :as browser
     'calcit-theme.schema $ %{} 'FileEntry
       :defs $ {}
+        'CirruNode $ %{} 'CodeEntry
+          :doc "|Cirru 源码节点仅为 token String 或递归 List；Number/Bool/nil 字面量保留为文本，不是运行时节点。"
+          :code $ quote $ defunion CirruNode String
+            quote $ List calcit-theme.schema/CirruNode
+          :examples $ []
+          :schema $ quote UnionDef
+          :tests $ [] $ %{} 'TestEntry (:name |recursive-source-tree-boundary)
+            :code $ quote $ let
+                tree $ decode-map-as
+                  [] |defn $ [] |main! $ []
+                  quote $ List calcit-theme.schema/CirruNode
+              assert=
+                [] |defn $ [] |main! $ []
+                , tree
+              assert= :rejected $ try
+                do
+                  decode-map-as
+                    [] $ [] 1
+                    quote $ List calcit-theme.schema/CirruNode
+                  , :accepted
+                fn (_error)
+                  hint-fn $ Fn String $ -> Tag
+                  , :rejected
+              , &unit
         'Op $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defenum Op (:states 'Dynamic 'Dynamic) (:content 'String) (:hydrate-storage 'calcit-theme.types/StoreData)
+          :code $ quote $ defenum Op (:states Dynamic Dynamic) (:content String) (:hydrate-storage calcit-theme.types/StoreData)
           :examples $ []
           :schema $ quote Enum
         'store $ %{} 'CodeEntry (:doc |)
@@ -369,6 +404,10 @@
         :code $ quote $ ns calcit-theme.schema
     'calcit-theme.theme $ %{} 'FileEntry
       :defs $ {}
+        'ExprStyleValue $ %{} 'CodeEntry (:doc "|decorate-expr 实际生成的有限 CSS 值，不扩张为任意对象。")
+          :code $ quote $ defunion ExprStyleValue String Number Tag
+          :examples $ []
+          :schema $ quote UnionDef
         'decorate-expr $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn decorate-expr (tailing? inline? root?)
             cond
@@ -377,7 +416,8 @@
               inline? $ {} (:display :inline-block) (:border-width "|0 0 1px 0px") (:padding "|2px 4px") (:margin-bottom 0)
               true $ {}
           :examples $ []
-          :schema $ quote $ Fn Bool Bool Bool (-> Dynamic)
+          :schema $ quote $ Fn Bool Bool Bool
+            -> $ Map Tag calcit-theme.theme/ExprStyleValue
         'decorate-leaf $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn decorate-leaf (text leading?)
             cond
@@ -453,7 +493,7 @@
     'calcit-theme.types $ %{} 'FileEntry
       :defs $ {}
         'StoreData $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defstruct StoreData (:states 'Map) (:content 'String)
+          :code $ quote $ defstruct StoreData (:states Map) (:content String)
           :examples $ []
           :schema $ quote StructDef
         'restore-store $ %{} 'CodeEntry (:doc |)
@@ -501,7 +541,7 @@
               (:states cursor s)
                 assoc store :states $ decode-map-as
                   update-state-tree (:states store)
-                    decode-map-as cursor $ :: 'List 'Dynamic
+                    decode-map-as cursor $ quote $ List Dynamic
                     , s
                   , 'Map
               (:content c)

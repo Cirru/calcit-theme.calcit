@@ -2,13 +2,33 @@
 
 Calcit JS 项目的 Cirru 语法高亮主题，从 ClojureScript 版本移植。
 
-## 0.4.12 候选：使用者影响
+## 0.5.0 本地候选：使用者影响
 
-CLI / `@calcit/procs` 配对正式 **0.32.1**；消费者必须更新完整模块图并重新生成 JS，旧 0.30 消费者继续使用原维护线。本候选没有发布 0.4.12 tag，不要把源码版本号当作已发布依赖。
+CLI / `@calcit/procs` 配对正式 **0.34.2**。公开 `render-expr` / `comp-expr` 的树参数
+收紧为 `List<calcit-theme.schema/CirruNode>`，其中 `CirruNode = String | List<CirruNode>`。
+数值、Bool、nil 字面量仍是源文本 String，不能把运行时 Number/Bool/nil 当作节点。
+持有 `List<Dynamic>` 的调用方需先按这个递归模型解码；非法嵌套值会在边界更早报错。
+原高亮、空表达式、嵌套布局、hover/active、CSS 值和 HUD 保持。
 
-配套已发布 Respo 0.17.1、UI 0.9.0、JS FFI 0.2.9、Reel 0.7.0-alpha.5，传递 Router 0.9.0-alpha.4。Reel/Router 仍含 alpha，不宣称整图均为正式版。已用真实 Caps strict 解析发布模块并通过 toolchain 校验，源码与本地测试使用的不可变版本一致。最新 main 未变化且无重复迁移 PR，远端 CI 仍待验收；不用 main/hash 代替正式标签。
+`decorate-expr` 的返回类型为 `Map<Tag,ExprStyleValue>`，值闭合为 String / Number / Tag；
+没有将任意调用方样式假装成同质 Map。内部 child pair 的元素 union 只描述 Number 和
+Component，不替代固定位置构造的事实，也不使用 unsafe 强转。
+Demo 的旧 Reel `read-field` 改为必需字段读取，再保留本地 StoreData 身份检查；
+缺少 store 仍拒绝，诊断来自必需字段检查。可选调试面板改用显式 Option，未显示时不插入占位节点。
 
-官方 formatter 迁移类型存储写法，36 个原定义的 schema、原测试及运行逻辑保持；高亮样式、嵌套表达式布局、hover/active 和 HUD 保持；三个既有 DOM unsafe 边界改用 `js-cast` 检查声明的顶层成员存在、方法可调用，缺少成员会在入口更早报错。两个公开样式值继续为真实 `Map<Tag,String>`，不改主题 CSS。不添加 unsafe 强转、预算豁免、验证脚本或测试框架。
+候选完整依赖图为 Reel **0.8.1**、UI **0.11.1**、Respo **0.18.1**、JS-FFI **0.2.9**，
+传递 Router **0.9.1**。这是保留旧 Map 事件/坐标的兼容维护图，不能与 Respo 0.19 图混装；
+直接消费 Respo `show` 且省略 fallback 的代码需接收 Option。Router 0.9.1 已正式发布，
+UI/Reel 尚在独立维护候选阶段；当前本地链接只证明源码预检，不是正式 Caps 安装验收。
+本轮未创建 Theme PR、发布 tag 或部署，不能把版本字段当作已发布依赖。
+
+本地源码预检：222 个全部定义、40 个公开定义、完整 strict、原两项与新增递归边界测试
+（native / JS 各 3 项）、原 3 项 Node 渲染/状态/FFI 回归、immutable 与构建通过。
+未新增检查脚本或测试框架。原质量基线逐字节保持，门禁通过；同一 0.34.2 工具链下
+schemaDynamic 4→2、unresolved 6→2、typeNotFull 7→4、codeNil 2→0、unsafe 仍为 0。
+这些计数不展开已有 Struct 字段，开放存储/宿主边界仍存在，不宣称 Dynamic 清零。
+公开组件的内存夹具已验证中文、空表达式、嵌套渲染及真实指针跨节点高亮，控制台无警告/错误；
+未运行 Demo 的存档/定时保存流程。正式已发布图与远端完整 CI 尚待完成。
 
 ## 存档与类型边界
 
@@ -33,7 +53,7 @@ yarn vite build --base=./
 node --test scripts/regression.test.mjs
 ```
 
-本轮本地 215 个定义、36 个公开定义、完整 strict（passed 且 diagnostics 为空）、原两项附带测试、现有三项 Node 渲染/状态/FFI 回归、immutable 与构建通过；回归中补验 active 增删及冒泡隔离、缺少注册方法的拒绝。unsafe 3→0，收紧后的质量基线通过，其他指标不变。本轮 0.32.1 实际页面已验证默认嵌套表达式、真实指针跨节点高亮切换和刷新，控制台无 warn/error；active 增删和冒泡隔离由现有 Node 回归覆盖，不冒充实际按住鼠标时的视觉验收。坏存档、HMR 和定时保存未复验。
+历史 0.4.12 / 0.32.1 候选记录（不作为本轮证据）：215 个定义、36 个公开定义、完整 strict（passed 且 diagnostics 为空）、原两项附带测试、现有三项 Node 渲染/状态/FFI 回归、immutable 与构建通过；回归中补验 active 增删及冒泡隔离、缺少注册方法的拒绝。unsafe 3→0，收紧后的质量基线通过，其他指标不变。当时 0.32.1 实际页面已验证默认嵌套表达式、真实指针跨节点高亮切换和刷新，控制台无 warn/error；active 增删和冒泡隔离由现有 Node 回归覆盖，不冒充实际按住鼠标时的视觉验收。坏存档、HMR 和定时保存未复验。
 
 本地预览先运行 `calcit js`，再运行 `yarn vite --host 127.0.0.1`。刷新会经过原保存/恢复流程。
 
