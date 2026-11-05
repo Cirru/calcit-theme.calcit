@@ -5,7 +5,7 @@ import * as browser from '../js-out/js-ffi.browser.mjs';
 import { render_expr, effect_highlight, handle_active_event_$x_ } from '../js-out/calcit-theme.comp.expr.mjs';
 import { effect_args, effect_method } from '../js-out/respo.util.detect.mjs';
 import { comp_container } from '../js-out/calcit-theme.comp.container.mjs';
-import { reel } from '../js-out/reel.schema.mjs';
+import { new_reel } from '../js-out/reel.typed.mjs';
 import { store, Op } from '../js-out/calcit-theme.schema.mjs';
 import { updater } from '../js-out/calcit-theme.updater.mjs';
 import { restore_store } from '../js-out/calcit-theme.types.mjs';
@@ -65,7 +65,7 @@ test('typed state and content operations preserve one state tree', () => {
   assert.equal(clt._$e_(restore_store(clt.parse_cirru_edn(clt.format_cirru_edn(content))), content), true);
   assert.equal(restore_store(content), content);
   assert.throws(() => restore_store(map(t.states, map(), t.content, 42)));
-  assert.equal(typeof make_string(comp_container(clt.assoc(reel, t.store, content))), 'string');
+  assert.equal(typeof make_string(comp_container(new_reel(content))), 'string');
 });
 
 test('the five Theme browser APIs remain available in the aligned FFI release', () => {

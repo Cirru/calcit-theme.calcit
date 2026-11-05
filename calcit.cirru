@@ -6,31 +6,25 @@
     {} (:description |) (:init-fn 'calcit-theme.main/main!) (:mode :js) (:reload-fn 'calcit-theme.main/reload!) (:target :browser)
       :feature-policy $ {}
       :modules $ [] |respo.calcit/ |respo-ui.calcit/ |reel.calcit/
-      :type-slots $ {} $ :dispatch-op |calcit-theme.schema/Op
+      :type-slots $ {} $ :dispatch-op |calcit-theme.schema/DispatchOp
   :files $ {}
     'calcit-theme.comp.container $ %{} 'FileEntry
       :defs $ {}
         'comp-container $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-container (reel)
             let
-                store $ let
-                    raw-store $ reel-schema/require-field reel :store
-                  if (struct? raw-store)
-                    struct-match raw-store (calcit-theme.types/StoreData checked checked)
-                      _ _ $ raise "|Expected Theme StoreData"
-                    raise "|Expected Theme StoreData"
-                states $ :states store
+                states $ :states $ :store reel
                 data $ decode-map-as
                   parse-cirru-list $ slurp |examples/demo.cirru
-                  quote $ List calcit-theme.schema/CirruNode
+                  List calcit-theme.schema/CirruNode
               div
                 {} $ :class-name css-body
                 render-expr data
                 if dev?
-                  Option :some $ comp-reel (>> states :reel) reel $ {}
+                  Option :some $ comp-typed-reel (>> states :reel) reel $ {}
                   Option :none
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) (-> respo.schema/Component)
+          :schema $ quote $ Fn (reel.typed/State calcit-theme.schema/Op calcit-theme.types/StoreData) (-> respo.schema/Component)
         'css-body $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle css-body
             {} $ |$0 $ merge ui/global ui/fullscreen
@@ -51,9 +45,7 @@
             respo-ui.core :as ui
             respo.core :refer $ defcomp >> <> div button textarea span
             respo.css :refer $ defstyle
-            respo.comp.space :refer $ =<
-            reel.comp.reel :refer $ comp-reel
-            reel.schema :as reel-schema
+            reel.comp.reel :refer $ comp-typed-reel
             calcit-theme.config :refer $ dev?
             calcit-theme.comp.expr :refer $ comp-expr render-expr
     'calcit-theme.comp.expr $ %{} 'FileEntry
@@ -61,8 +53,8 @@
         'DomTokenListHost $ %{} 'CodeEntry
           :doc "|DOMTokenList operations used by the hover highlighter."
           :code $ quote $ deftrait DomTokenListHost
-            .add! $ quote $ Fn calcit-theme.comp.expr/DomTokenListHost String (-> Unit)
-            .remove! $ quote $ Fn calcit-theme.comp.expr/DomTokenListHost String (-> Unit)
+            .add! $ Fn calcit-theme.comp.expr/DomTokenListHost String $ -> Unit
+            .remove! $ Fn calcit-theme.comp.expr/DomTokenListHost String $ -> Unit
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
             :names $ {} (:add! |add) (:remove! |remove)
@@ -74,7 +66,7 @@
         'HighlightElementHost $ %{} 'CodeEntry
           :doc "|DOM element surface used by the hover highlighter."
           :code $ quote $ deftrait HighlightElementHost (:tag-name 'String) (:class-list 'calcit-theme.comp.expr/DomTokenListHost)
-            .add-event-listener! $ quote $ Fn calcit-theme.comp.expr/HighlightElementHost String
+            .add-event-listener! $ Fn calcit-theme.comp.expr/HighlightElementHost String
               Fn calcit-theme.comp.expr/HighlightEventHost $ -> Unit
               -> Unit
           :examples $ []
@@ -125,7 +117,7 @@
                           recur
                             conj acc $ assert-type
                               [] idx $ comp-leaf head $ &= 0 idx
-                              quote $ List calcit-theme.comp.expr/ExpressionChildPart
+                              List calcit-theme.comp.expr/ExpressionChildPart
                             , tail (inc idx) :leaf
                         (List children)
                           if
@@ -137,7 +129,7 @@
                             recur
                               conj acc $ assert-type
                                 [] idx $ comp-expr children false false true
-                                quote $ List calcit-theme.comp.expr/ExpressionChildPart
+                                List calcit-theme.comp.expr/ExpressionChildPart
                               , tail (inc idx) :leaf
                             let
                                 size $ .len children
@@ -154,7 +146,7 @@
                                   [] idx $ comp-expr children
                                     = (inc idx) (.len expr)
                                     , false $ = layout-kind :inline-expr
-                                  quote $ List calcit-theme.comp.expr/ExpressionChildPart
+                                  List calcit-theme.comp.expr/ExpressionChildPart
                                 , tail (inc idx) layout-kind
           :examples $ []
           :schema $ quote $ Fn (List calcit-theme.schema/CirruNode) Bool Bool Bool (-> respo.schema/Component) (:features :js-ffi)
@@ -187,8 +179,7 @@
         'effect-highlight $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defeffect effect-highlight (root?) (action el at?)
             if root? $ let
-                *highlight $ ref $ assert-type (Option :none)
-                  quote $ Option calcit-theme.comp.expr/HighlightElementHost
+                *highlight $ ref $ assert-type (Option :none) (Option calcit-theme.comp.expr/HighlightElementHost)
               if (= action :mount) (register-hover! el *highlight)
           :examples $ []
           :schema $ quote $ Fn Bool (-> respo.schema/Effect) (:features :js-ffi)
@@ -272,22 +263,22 @@
       :defs $ {}
         '*reel $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defref *reel
-            -> reel-schema/reel (assoc :base schema/store) (assoc :store schema/store)
+            reel.typed/State :base schema/store :store schema/store :records ([]) :pointer (Option :none) :stopped? false :display? false :merged? false
           :examples $ []
-          :schema $ quote $ Ref (Map Tag Dynamic)
+          :schema $ quote $ Ref (reel.typed/State calcit-theme.schema/Op calcit-theme.types/StoreData)
         'dispatch! $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn dispatch! (op) (; println |Dispatch: op)
-            reset! *reel $ reel-updater
-              fn (raw-store raw-op raw-id raw-time)
-                hint-fn $ Fn Dynamic Dynamic Dynamic Dynamic $ -> calcit-theme.types/StoreData
-                updater (calcit-theme.types/restore-store raw-store)
-                  if (enum? raw-op) raw-op $ raise "|Expected Enum operation"
-                  decode-map-as raw-id 'String
-                  decode-map-as raw-time 'Number
-              , @*reel op
+          :code $ quote $ defn dispatch! (op)
+            match (reel.typed/decode-control op)
+              (:some control)
+                reset! *reel $ reel.typed/apply-control updater @*reel control
+              (:none)
+                match (try-decode-map-as op calcit-theme.schema/Op)
+                  (:ok action)
+                    reset! *reel $ reel.typed/record-op updater @*reel action (generate-id!) (js-ffi.shared/now-ms)
+                  (:err _) (eprintln "|unknown op:" op)
             , &unit
           :examples $ []
-          :schema $ quote $ Fn Enum (-> Unit)
+          :schema $ quote $ Fn AnyEnum (-> Unit) (:features :js-ffi)
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! ()
             println "|Running mode:" $ if config/dev? |dev |release
@@ -296,7 +287,7 @@
                   get config/site :storage-key
                   , .unwrap
               when (raw .some?)
-                dispatch! $ :: :hydrate-storage $ let
+                dispatch! $ schema/Op :hydrate-storage $ let
                     stored $ parse-cirru-edn $ raw .unwrap
                   calcit-theme.types/restore-store stored
             render-app!
@@ -317,14 +308,7 @@
             browser/storage-set!
                 get config/site :storage-key
                 , .unwrap
-              format-cirru-edn $ let
-                  stored $ match (get @*reel :store)
-                    (:some data) data
-                    (:none) schema/store
-                if (struct? stored)
-                  struct-match stored (calcit-theme.types/StoreData checked checked)
-                    _ _ $ raise "|Expected Theme StoreData"
-                  decode-map-as stored calcit-theme.types/StoreData
+              format-cirru-edn $ :store @*reel
           :examples $ []
           :schema $ quote $ Fn (-> Unit)
         'reload! $ %{} 'CodeEntry (:doc |)
@@ -332,8 +316,7 @@
             if (nil? build-errors)
               do (clear-cache!) (remove-watch! *reel :changes)
                 add-watch! *reel :changes $ fn (_reel _prev) (render-app!) &unit
-                reset! *reel $ decode-map-as (refresh-reel @*reel schema/store updater)
-                  quote $ Map Tag Dynamic
+                reset! *reel $ reel.typed/refresh updater @*reel schema/store
                 println "|Code updated."
                 hud! |ok~ |Ok
               hud! |error build-errors
@@ -344,9 +327,7 @@
           :code $ quote $ defn render-app! ()
             render-with! (mount-target)
               fn () $ comp-container @*reel
-              fn (raw-op)
-                hint-fn $ Fn calcit-theme.schema/Op $ -> Unit
-                if (enum? raw-op) (dispatch! raw-op) (raise "|Expected Enum operation")
+              , dispatch!
           :examples $ []
           :schema $ quote $ Fn (-> Unit)
         'repeat! $ %{} 'CodeEntry (:doc |)
@@ -367,8 +348,6 @@
             calcit-theme.updater :refer $ updater
             calcit-theme.schema :as schema
             reel.util :refer $ listen-devtools!
-            reel.core :refer $ reel-updater refresh-reel
-            reel.schema :as reel-schema
             calcit-theme.config :as config
             |./calcit.build-errors :default build-errors
             |bottom-tip :default hud!
@@ -377,8 +356,7 @@
       :defs $ {}
         'CirruNode $ %{} 'CodeEntry
           :doc "|Cirru 源码节点仅为 token String 或递归 List；Number/Bool/nil 字面量保留为文本，不是运行时节点。"
-          :code $ quote $ defunion CirruNode String
-            quote $ List calcit-theme.schema/CirruNode
+          :code $ quote $ defunion CirruNode String (List calcit-theme.schema/CirruNode)
           :examples $ []
           :schema $ quote UnionDef
           :tests $ [] $ %{} 'TestEntry (:name |recursive-source-tree-boundary)
@@ -399,8 +377,15 @@
                   hint-fn $ Fn String $ -> Tag
                   , :rejected
               , &unit
+        'DispatchOp $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ def DispatchOp (:: :reel/toggle)
+          :examples $ []
+          :schema $ quote AnyEnum
         'Op $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defenum Op (:states Dynamic Dynamic) (:content String) (:hydrate-storage calcit-theme.types/StoreData)
+          :code $ quote $ defenum Op
+            :states (List respo.schema/CoordKey) Dynamic
+            :content String
+            :hydrate-storage calcit-theme.types/StoreData
           :examples $ []
           :schema $ quote EnumDef
         'store $ %{} 'CodeEntry (:doc |)
@@ -546,18 +531,14 @@
         %{} 'CodeEntry (:doc |)
           :code $ quote $ defn updater (store op op-id op-time)
             match op
-              (:states cursor s)
+              (:states cursor state)
                 assoc store :states $ decode-map-as
-                  update-state-tree (:states store)
-                    decode-map-as cursor $ quote $ List Dynamic
-                    , s
-                  , 'Map
-              (:content c)
-                assoc store :content $ decode-map-as c 'String
-              (:hydrate-storage d) (calcit-theme.types/restore-store d)
-              _ $ do (eprintln "|unknown op:" op) store
+                  update-state-tree (:states store) cursor state
+                  , Map
+              (:content content) (assoc store :content content)
+              (:hydrate-storage stored) stored
           :examples $ []
-          :schema $ quote $ Fn calcit-theme.types/StoreData Enum String Number (-> calcit-theme.types/StoreData)
+          :schema $ quote $ Fn calcit-theme.types/StoreData calcit-theme.schema/Op String Number (-> calcit-theme.types/StoreData)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns calcit-theme.updater
           :require $ respo.cursor :refer $ update-state-tree
