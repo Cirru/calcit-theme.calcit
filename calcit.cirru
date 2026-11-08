@@ -6,7 +6,7 @@
     {} (:description |) (:init-fn 'calcit-theme.main/main!) (:mode :js) (:reload-fn 'calcit-theme.main/reload!) (:target :browser)
       :feature-policy $ {}
       :modules $ [] |respo.calcit/ |respo-ui.calcit/ |reel.calcit/
-      :type-slots $ {} $ :dispatch-op |calcit-theme.schema/DispatchOp
+      :type-slots $ {} $ :dispatch-op 'calcit-theme.schema/DispatchOp
   :files $ {}
     'calcit-theme.comp.container $ %{} 'FileEntry
       :defs $ {}
@@ -268,17 +268,27 @@
           :schema $ quote $ Ref (reel.typed/State calcit-theme.schema/Op calcit-theme.types/StoreData)
         'dispatch! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch! (op)
-            match (reel.typed/decode-control op)
-              (:some control)
-                reset! *reel $ reel.typed/apply-control updater @*reel control
-              (:none)
-                match (try-decode-map-as op calcit-theme.schema/Op)
-                  (:ok action)
-                    reset! *reel $ reel.typed/record-op updater @*reel action (generate-id!) (js-ffi.shared/now-ms)
-                  (:err _) (eprintln "|unknown op:" op)
+            if
+              = (enum-definition op) (Option :some reel.typed/Control)
+              dispatch-resolved! $ decode-map-as op 'reel.typed/Control
+              match (reel.typed/decode-control op)
+                (:some control) (dispatch-resolved! control)
+                (:none)
+                  match (try-decode-map-as op calcit-theme.schema/Op)
+                    (:ok action) (dispatch-resolved! action)
+                    (:err _) (eprintln "|unknown op:" op)
             , &unit
           :examples $ []
           :schema $ quote $ Fn AnyEnum (-> Unit) (:features :js-ffi)
+        'dispatch-resolved! $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn dispatch-resolved! (op)
+            hint-fn $ Fn calcit-theme.schema/ResolvedOp (-> Unit) (:features :js-ffi)
+            reset! *reel $ match op
+              (reel.typed/Control control) (reel.typed/apply-control updater @*reel control)
+              (calcit-theme.schema/Op action)
+                reel.typed/record-op updater @*reel action (generate-id!) (js-ffi.shared/now-ms)
+            , &unit
+          :examples $ []
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! ()
             println "|Running mode:" $ if config/dev? |dev |release
@@ -363,7 +373,7 @@
             :code $ quote $ let
                 tree $ decode-map-as
                   [] |defn $ [] |main! $ []
-                  quote $ List calcit-theme.schema/CirruNode
+                  List calcit-theme.schema/CirruNode
               assert=
                 [] |defn $ [] |main! $ []
                 , tree
@@ -371,7 +381,7 @@
                 do
                   decode-map-as
                     [] $ [] 1
-                    quote $ List calcit-theme.schema/CirruNode
+                    List calcit-theme.schema/CirruNode
                   , :accepted
                 fn (_error)
                   hint-fn $ Fn String $ -> Tag
@@ -388,6 +398,10 @@
             :hydrate-storage calcit-theme.types/StoreData
           :examples $ []
           :schema $ quote EnumDef
+        'ResolvedOp $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defunion ResolvedOp Op reel.typed/Control
+          :examples $ []
+          :schema $ quote UnionDef
         'store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def store
             calcit-theme.types/StoreData :states ({}) :content |
