@@ -5,7 +5,7 @@
       :deprecatedCalls 0
       :schemaDynamic 0
       :typeNone 0
-      :typeNotFull 1
+      :typeNotFull 0
       :unresolved 0
       :unsafeCoerce 0
   :metrics $ {} (:codeDynamic 0)
@@ -13,7 +13,7 @@
     :deprecatedCalls 0
     :schemaDynamic 0
     :typeNone 0
-    :typeNotFull 1
+    :typeNotFull 0
     :unresolved 0
     :unsafeCoerce 0
   :scope $ {} (:includeDependencies false)

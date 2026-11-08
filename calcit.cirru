@@ -219,7 +219,7 @@
           :code $ quote $ defn register-hover! (el *highlight)
             .add-event-listener! (js-cast el HighlightElementHost) |mouseover $ fn (event) (handle-hover! *highlight event)
           :examples $ []
-          :schema $ quote $ Fn Dynamic
+          :schema $ quote $ Fn respo.dom/DomElement
             Ref $ calcit.core/Option calcit-theme.comp.expr/HighlightElementHost
             -> Unit
             :features :js-ffi
