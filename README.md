@@ -4,7 +4,7 @@ Calcit JS 项目的 Cirru 语法高亮主题，从 ClojureScript 版本移植。
 
 ## 0.6.2 候选的使用者影响
 
-将 Calcit CLI 和 `@calcit/procs` 一起升级到 **0.37.0**，重新安装依赖并生成 JS。
+将 Calcit CLI 和 `@calcit/procs` 一起升级到 **0.38.0**，重新安装依赖并生成 JS。
 `render-expr` 和 `comp-expr` 继续接收 `List<CirruNode>`。`CirruNode` 表示源码字符串或递归列表，
 源码中的数字、Bool 和 nil 字面量仍以字符串传入。
 
@@ -16,7 +16,7 @@ Demo 使用 `State<Op, StoreData>`，入口接受具名和旧 Reel 控制事件�
 
 Demo 启动先恢复存档，再首次渲染和注册 beforeunload / 60 秒保存。恢复失败时停止，避免初始状态覆盖原值；不清空存档，不补业务默认值。旧 Map 经过字段校验，无来源的序列化 Struct 经受检 wire 解码重建本地 StoreData，不用名称替代名义身份；本地 Store 保留原对象。正常刷新不能代替所有坏存档保留性验收。
 
-开放 Reel/UI/存储边界保留实际 Enum、List、Map 和 nominal 检查，未知 Enum 仍会记录警告，且不会写入 Reel 历史。质量门禁将 `schemaDynamic` 和 `unresolved` 上限收紧为 0。`js-cast` 不等于深层值或 nominal 身份校验。
+开放 Reel/UI/存储边界保留实际 Enum、List、Map 和 nominal 检查，未知 Enum 仍会记录警告，且不会写入 Reel 历史。悬浮监听接收 Respo effect 提供的 `DomElement`，注册前仍验证宿主的高亮接口。质量门禁的 `schemaDynamic`、`unresolved` 和 `typeNotFull` 上限均为 0。
 
 ## 开发与验证
 
@@ -41,7 +41,7 @@ node --test scripts/regression.test.mjs
 
 ## 前端部署
 
-CI 保留全部/公开定义、完整 strict、原测试及原质量门禁，仅上传前端 dist，使用 COS action v1.2.0 内置 verify，不另加上传校验脚本。PR 前缀包含编号、run 和 attempt；生产前缀与 `/web-assets/repo/Cirru/calcit-theme.calcit` 服务器路径保持，过期 main 在部署前跳过，上传排队不中断。
+CI 保留全部/公开定义、完整 strict、原测试及原质量门禁，仅上传前端 dist，使用 COS action v1.3.0 内置 verify，不另加上传校验脚本。PR 前缀包含编号、run 和 attempt；生产前缀与 `/web-assets/repo/Cirru/calcit-theme.calcit` 服务器路径保持，过期 main 在部署前跳过，上传排队不中断。
 
 仅创建迁移 PR 和隔离前端预览，不合并、不部署生产、不发布 tag/npm。main 合并会执行原 Demo 部署，仍需相应授权。
 
