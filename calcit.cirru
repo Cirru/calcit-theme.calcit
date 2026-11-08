@@ -6,12 +6,12 @@
     {} (:description |) (:init-fn 'calcit-theme.main/main!) (:mode :js) (:reload-fn 'calcit-theme.main/reload!) (:target :browser)
       :feature-policy $ {}
       :modules $ [] |respo.calcit/ |respo-ui.calcit/ |reel.calcit/
-      :type-slots $ {} $ :dispatch-op 'calcit-theme.schema/DispatchOp
+      :type-slots $ {} $ :dispatch-op 'calcit-theme.schema/Op
   :files $ {}
     'calcit-theme.comp.container $ %{} 'FileEntry
       :defs $ {}
         'comp-container $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defcomp comp-container (reel)
+          :code $ quote $ defcomp comp-container (reel on-control)
             let
                 states $ :states $ :store reel
                 data $ decode-map-as
@@ -21,10 +21,12 @@
                 {} $ :class-name css-body
                 render-expr data
                 if dev?
-                  Option :some $ comp-typed-reel (>> states :reel) reel $ {}
+                  Option :some $ comp-typed-reel (>> states :reel) reel ({}) on-control
                   Option :none
           :examples $ []
-          :schema $ quote $ Fn (reel.typed/State calcit-theme.schema/Op calcit-theme.types/StoreData) (-> respo.schema/Component)
+          :schema $ quote $ Fn (reel.typed/State calcit-theme.schema/Op calcit-theme.types/StoreData)
+            Fn reel.typed/Control $ -> Unit
+            -> respo.schema/Component
         'css-body $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle css-body
             {} $ |$0 $ merge ui/global ui/fullscreen
@@ -267,28 +269,11 @@
           :examples $ []
           :schema $ quote $ Ref (reel.typed/State calcit-theme.schema/Op calcit-theme.types/StoreData)
         'dispatch! $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn dispatch! (op)
-            if
-              = (enum-definition op) (Option :some reel.typed/Control)
-              dispatch-resolved! $ decode-map-as op 'reel.typed/Control
-              match (reel.typed/decode-control op)
-                (:some control) (dispatch-resolved! control)
-                (:none)
-                  match (try-decode-map-as op calcit-theme.schema/Op)
-                    (:ok action) (dispatch-resolved! action)
-                    (:err _) (eprintln "|unknown op:" op)
+          :code $ quote $ defn dispatch! (action)
+            reset! *reel $ reel.typed/record-op updater @*reel action (generate-id!) (js-ffi.shared/now-ms)
             , &unit
           :examples $ []
-          :schema $ quote $ Fn AnyEnum (-> Unit) (:features :js-ffi)
-        'dispatch-resolved! $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn dispatch-resolved! (op)
-            hint-fn $ Fn calcit-theme.schema/ResolvedOp (-> Unit) (:features :js-ffi)
-            reset! *reel $ match op
-              (reel.typed/Control control) (reel.typed/apply-control updater @*reel control)
-              (calcit-theme.schema/Op action)
-                reel.typed/record-op updater @*reel action (generate-id!) (js-ffi.shared/now-ms)
-            , &unit
-          :examples $ []
+          :schema $ quote $ Fn calcit-theme.schema/Op (-> Unit) (:features :js-ffi)
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! ()
             println "|Running mode:" $ if config/dev? |dev |release
@@ -302,7 +287,7 @@
                   calcit-theme.types/restore-store stored
             render-app!
             add-watch! *reel :changes $ fn (_reel _prev) (render-app!) &unit
-            listen-devtools! |a dispatch!
+            listen-devtools! |a on-control!
             browser/add-event-listener! |beforeunload $ fn (_event) (persist-storage!)
             repeat! 60 persist-storage!
             println "|App started."
@@ -313,6 +298,12 @@
             (respo.ffi.browser/query-selector |.app) .unwrap
           :examples $ []
           :schema $ quote $ Fn (-> respo.dom/DomElement) (:features :js-ffi)
+        'on-control! $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn on-control! (control)
+            reset! *reel $ reel.typed/apply-control updater @*reel control
+            , &unit
+          :examples $ []
+          :schema $ quote $ Fn reel.typed/Control (-> Unit)
         'persist-storage! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn persist-storage! ()
             browser/storage-set!
@@ -336,7 +327,7 @@
         'render-app! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-app! ()
             render-with! (mount-target)
-              fn () $ comp-container @*reel
+              fn () $ comp-container @*reel on-control!
               , dispatch!
           :examples $ []
           :schema $ quote $ Fn (-> Unit)
@@ -387,10 +378,6 @@
                   hint-fn $ Fn String $ -> Tag
                   , :rejected
               , &unit
-        'DispatchOp $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ def DispatchOp (:: :reel/toggle)
-          :examples $ []
-          :schema $ quote AnyEnum
         'Op $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defenum Op
             :states (List respo.schema/CoordKey) Dynamic
@@ -398,10 +385,6 @@
             :hydrate-storage calcit-theme.types/StoreData
           :examples $ []
           :schema $ quote EnumDef
-        'ResolvedOp $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defunion ResolvedOp Op reel.typed/Control
-          :examples $ []
-          :schema $ quote UnionDef
         'store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def store
             calcit-theme.types/StoreData :states ({}) :content |
