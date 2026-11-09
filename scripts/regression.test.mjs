@@ -65,7 +65,7 @@ test('typed state and content operations preserve one state tree', () => {
   assert.equal(clt._$e_(restore_store(clt.parse_cirru_edn(clt.format_cirru_edn(content))), content), true);
   assert.equal(restore_store(content), content);
   assert.throws(() => restore_store(map(t.states, map(), t.content, 42)));
-  assert.equal(typeof make_string(comp_container(new_reel(content))), 'string');
+  assert.equal(typeof make_string(comp_container(new_reel(content), () => {})), 'string');
 });
 
 test('the five Theme browser APIs remain available in the aligned FFI release', () => {
