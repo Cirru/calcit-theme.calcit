@@ -61,10 +61,6 @@
           :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
             :names $ {} (:add! |add) (:remove! |remove)
           :schema $ quote Trait
-        'ExpressionChildPart $ %{} 'CodeEntry (:doc "|渲染列表 pair 的元素种类；不表示任意 List 都满足固定二元位置合同。")
-          :code $ quote $ defunion ExpressionChildPart Number respo.schema/Component
-          :examples $ []
-          :schema $ quote UnionDef
         'HighlightElementHost $ %{} 'CodeEntry
           :doc "|DOM element surface used by the hover highlighter."
           :code $ quote $ deftrait HighlightElementHost (:tag-name 'String) (:class-list 'calcit-theme.comp.expr/DomTokenListHost)
@@ -86,7 +82,7 @@
           :code $ quote $ defcomp comp-expr (expr tailing? root? inline?)
             assert "|expr in list" $ list? expr
             [] (effect-highlight root?)
-              list->
+              keyed->
                 {} (:class-name css-expr)
                   :style $ theme/decorate-expr tailing? inline? root?
                   :on-mousedown $ fn (e d!)
@@ -106,20 +102,14 @@
                     xs expr
                     idx 0
                     prev-kind :leaf
-                  hint-fn $ Fn
-                    List $ List calcit-theme.comp.expr/ExpressionChildPart
-                    List calcit-theme.schema/CirruNode
-                    , Number Tag $ ->
-                      List $ List calcit-theme.comp.expr/ExpressionChildPart
+                  hint-fn $ Fn (List respo.schema/ChildPair) (List calcit-theme.schema/CirruNode) Number Tag $ -> (List respo.schema/ChildPair)
                   match (destruct-list xs)
                     (:none) acc
                     (:some head tail)
                       match head
                         (String head)
                           recur
-                            conj acc $ assert-type
-                              [] idx $ comp-leaf head $ &= 0 idx
-                              List calcit-theme.comp.expr/ExpressionChildPart
+                            conj acc $ keyed-component idx $ comp-leaf head (&= 0 idx)
                             , tail (inc idx) :leaf
                         (List children)
                           if
@@ -129,9 +119,7 @@
                                 (:some first-child) (calcit-theme.comp.expr/token-node? first-child)
                                 (:none) false
                             recur
-                              conj acc $ assert-type
-                                [] idx $ comp-expr children false false true
-                                List calcit-theme.comp.expr/ExpressionChildPart
+                              conj acc $ keyed-component idx $ comp-expr children false false true
                               , tail (inc idx) :leaf
                             let
                                 size $ .len children
@@ -144,11 +132,9 @@
                                     _ $ raise "|Unexpected layout kind"
                                   , :expr
                               recur
-                                conj acc $ assert-type
-                                  [] idx $ comp-expr children
-                                    = (inc idx) (.len expr)
-                                    , false $ = layout-kind :inline-expr
-                                  List calcit-theme.comp.expr/ExpressionChildPart
+                                conj acc $ keyed-component idx $ comp-expr children
+                                  = (inc idx) (.len expr)
+                                  , false (= layout-kind :inline-expr)
                                 , tail (inc idx) layout-kind
           :examples $ []
           :schema $ quote $ Fn (List calcit-theme.schema/CirruNode) Bool Bool Bool (-> respo.schema/Component) (:features :js-ffi)
@@ -240,7 +226,7 @@
         :code $ quote $ ns calcit-theme.comp.expr
           :require
             respo-ui.core :refer $ hsl
-            respo.core :refer $ defcomp list-> <> div button textarea span defeffect
+            respo.core :refer $ defcomp keyed-> keyed-component <> div button textarea span defeffect
             respo.css :refer $ defstyle
             respo.comp.space :refer $ =<
             calcit-theme.config :refer $ dev?

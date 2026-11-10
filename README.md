@@ -4,7 +4,7 @@ Calcit JS 项目的 Cirru 语法高亮主题，从 ClojureScript 版本移植。
 
 ## 0.6.2 候选的使用者影响
 
-将 Calcit CLI 和 `@calcit/procs` 一起升级到 **0.38.0**，重新安装依赖并生成 JS。
+将 Calcit CLI 和 `@calcit/procs` 一起升级到 **0.40.0**，重新安装依赖并生成 JS。
 `render-expr` 和 `comp-expr` 继续接收 `List<CirruNode>`。`CirruNode` 表示源码字符串或递归列表，
 源码中的数字、Bool 和 nil 字面量仍以字符串传入。
 
