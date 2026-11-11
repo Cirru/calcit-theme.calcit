@@ -79,7 +79,6 @@ jobs:
         calcit calcit.cirru js
         node --test scripts/regression.test.mjs
         yarn vite build --base="$VITE_BASE_URL"
-        node --test scripts/regression.test.mjs
 
     - name: Skip superseded production deployment
       id: deploy-head
