@@ -21,8 +21,8 @@
                 {} $ :class-name css-body
                 render-expr data
                 if dev?
-                  Option :some $ comp-typed-reel (>> states :reel) reel ({}) on-control
-                  Option :none
+                  Some $ comp-typed-reel (>> states :reel) reel ({}) on-control
+                  , None
           :examples $ []
           :schema $ quote $ Fn (reel.typed/State calcit-theme.schema/Op calcit-theme.types/StoreData)
             Fn reel.typed/Control $ -> Unit
@@ -151,7 +151,7 @@
           :code $ quote $ defstyle css-expr
             {} (|& theme/style-expr)
               |&.on-hover $ {} $ :border-color
-                hsl 0 0 100 $ Option :some 0.7
+                hsl 0 0 100 $ Some 0.7
               |&.on-active $ {} $ :transform "|translate(1px,0px)"
           :examples $ []
           :schema $ quote String
@@ -160,14 +160,14 @@
             {} (|& theme/style-leaf)
               |& $ {} $ :user-select :text
               |&:hover $ {} $ :background-color
-                hsl 0 0 100 $ Option :some 0.1
+                hsl 0 0 100 $ Some 0.1
               |&:active $ {} $ :transform "|translate(1px, 0px)"
           :examples $ []
           :schema $ quote String
         'effect-highlight $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defeffect effect-highlight (root?) (action el at?)
             if root? $ let
-                *highlight $ ref $ assert-type (Option :none) (Option calcit-theme.comp.expr/HighlightElementHost)
+                *highlight $ ref $ assert-type None (Option calcit-theme.comp.expr/HighlightElementHost)
               if (= action :mount) (register-hover! el *highlight)
           :examples $ []
           :schema $ quote $ Fn Bool (-> respo.schema/Effect) (:features :js-ffi)
@@ -197,18 +197,18 @@
                     .-class-list $ @*highlight .unwrap
                     , |on-hover
                 .add! (.-class-list t) |on-hover
-                reset! *highlight $ Option :some t
+                reset! *highlight $ Some t
               , &unit
           :examples $ []
           :schema $ quote $ Fn
-            Ref $ calcit.core/Option calcit-theme.comp.expr/HighlightElementHost
-            , calcit-theme.comp.expr/HighlightEventHost (-> Unit) (:features :js-ffi)
+            Ref $ Option HighlightElementHost
+            , HighlightEventHost (-> Unit) (:features :js-ffi)
         'register-hover! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn register-hover! (el *highlight)
             .add-event-listener! (js-cast el HighlightElementHost) |mouseover $ fn (event) (handle-hover! *highlight event)
           :examples $ []
           :schema $ quote $ Fn respo.dom/DomElement
-            Ref $ calcit.core/Option calcit-theme.comp.expr/HighlightElementHost
+            Ref $ Option HighlightElementHost
             -> Unit
             :features :js-ffi
         'render-expr $ %{} 'CodeEntry (:doc |)
@@ -251,15 +251,15 @@
       :defs $ {}
         '*reel $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defref *reel
-            reel.typed/State :base schema/store :store schema/store :records ([]) :pointer (Option :none) :stopped? false :display? false :merged? false
+            reel.typed/State :base schema/store :store schema/store :records ([]) :pointer None :stopped? false :display? false :merged? false
           :examples $ []
-          :schema $ quote $ Ref (reel.typed/State calcit-theme.schema/Op calcit-theme.types/StoreData)
+          :schema $ quote $ Ref (reel.typed/State schema/Op calcit-theme.types/StoreData)
         'dispatch! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch! (action)
             reset! *reel $ reel.typed/record-op updater @*reel action (generate-id!) (js-ffi.shared/now-ms)
             , &unit
           :examples $ []
-          :schema $ quote $ Fn calcit-theme.schema/Op (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn schema/Op (-> Unit) (:features :js-ffi)
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! ()
             println "|Running mode:" $ if config/dev? |dev |release
@@ -393,7 +393,7 @@
               true $ {}
           :examples $ []
           :schema $ quote $ Fn Bool Bool Bool
-            -> $ Map Tag calcit-theme.theme/ExprStyleValue
+            -> $ Map Tag ExprStyleValue
         'decorate-leaf $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn decorate-leaf (text leading?)
             cond
@@ -487,7 +487,7 @@
                     raise "|Expected Theme StoreData"
               decode-map-as data 'calcit-theme.types/StoreData
           :examples $ []
-          :schema $ quote $ Fn T (-> calcit-theme.types/StoreData) (:generics T)
+          :schema $ quote $ Fn T (-> StoreData) (:generics T)
           :tests $ [] $ %{} 'TestEntry (:name |legacy-map-and-store-roundtrip)
             :code $ quote $ let
                 legacy $ {}

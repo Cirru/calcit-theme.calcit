@@ -2,9 +2,9 @@
 
 Calcit JS 项目的 Cirru 语法高亮主题，从 ClojureScript 版本移植。
 
-## 0.6.2 候选的使用者影响
+## 0.6.3 候选的使用者影响
 
-将 Calcit CLI 和 `@calcit/procs` 一起升级到 **0.40.0**，重新安装依赖并生成 JS。
+将 Calcit CLI 和 `@calcit/procs` 一起升级到 **0.41.0**，重新安装依赖、生成 JS 并刷新页面。
 `render-expr` 和 `comp-expr` 继续接收 `List<CirruNode>`。`CirruNode` 表示源码字符串或递归列表，
 源码中的数字、Bool 和 nil 字面量仍以字符串传入。
 
@@ -16,7 +16,7 @@ Demo 使用 `State<Op, StoreData>`。业务派发接收具名的 `Op`，开发�
 
 Demo 启动先恢复存档，再首次渲染和注册 beforeunload / 60 秒保存。恢复失败时停止，避免初始状态覆盖原值；不清空存档，不补业务默认值。旧 Map 经过字段校验，无来源的序列化 Struct 经受检 wire 解码重建本地 StoreData，不用名称替代名义身份；本地 Store 保留原对象。正常刷新不能代替所有坏存档保留性验收。
 
-存档恢复和 UI 状态更新保留原有数据校验。悬浮监听接收 Respo effect 提供的 `DomElement`，注册前仍验证宿主的高亮接口。质量门禁的 `schemaDynamic`、`unresolved` 和 `typeNotFull` 上限均为 0。
+存档恢复和 UI 状态更新保留原有数据校验。悬浮监听接收 Respo effect 提供的 `DomElement`，注册前仍验证宿主的高亮接口。原零预算门禁改用 0.41.0 的 `analyze weak-types`，要求完整类型覆盖，schema/code Dynamic、未解析类型槽、nil、unsafe 和弃用调用均为零。通用 `Op :states` 的单个 data-dynamic 载荷按既有合同单独限制为一处，其余定义为零。
 
 ## 开发与验证
 
@@ -29,7 +29,8 @@ caps verify --toolchain
 calcit --check-only --all-defs
 calcit fix --workflow strict --verify
 calcit test --require-match
-calcit analyze quality --baseline config/calcit-quality.cirru
+calcit analyze weak-types --only coverage --coverage-level none,partial --format json | jq -e '.data.definitions | length == 0'
+calcit analyze weak-types --only schema-dynamic,unresolved-type-slot,code-dynamic,code-nil,unsafe-coerce --format json | jq -e '.data.definitions | length == 0'
 calcit js
 yarn vite build --base=./
 node --test scripts/regression.test.mjs
