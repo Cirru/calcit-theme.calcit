@@ -53,7 +53,10 @@ jobs:
         calcit calcit.cirru fix --workflow strict --verify --format json | jq -e '.data.workflow.status == "passed" and .diagnostics == []'
         calcit calcit.cirru test --require-match
         calcit calcit.cirru --check-only --ns calcit-theme.main --ns calcit-theme.theme --ns calcit-theme.schema --ns calcit-theme.updater --ns calcit-theme.comp.expr --ns calcit-theme.comp.container --ns calcit-theme.types --ns calcit-theme.config --summary-only
-        calcit calcit.cirru analyze quality --baseline config/calcit-quality.cirru
+        calcit analyze weak-types --only coverage --coverage-level none,partial --format json | jq -e '.data.definitions | length == 0'
+        calcit analyze weak-types --only schema-dynamic,unresolved-type-slot,code-dynamic,code-nil,unsafe-coerce --format json | jq -e '.data.definitions | length == 0'
+        calcit analyze weak-types --only data-dynamic --format json | jq -e 'all(.data.definitions[]; .id == "calcit-theme.schema/Op" and (.occurrences | length) <= 1)'
+        calcit analyze weak-types --only deprecated-call --summary-only --format json | jq -e '.data.summary.calls == 0'
 
     - name: Build client with CDN asset URLs
       id: asset-path
