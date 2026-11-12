@@ -167,7 +167,7 @@
         'effect-highlight $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defeffect effect-highlight (root?) (action el at?)
             if root? $ let
-                *highlight $ ref $ assert-type None (Option calcit-theme.comp.expr/HighlightElementHost)
+                *highlight $ ref $ assert-type None (Option HighlightElementHost)
               if (= action :mount) (register-hover! el *highlight)
           :examples $ []
           :schema $ quote $ Fn Bool (-> respo.schema/Effect) (:features :js-ffi)
@@ -366,7 +366,7 @@
               , &unit
         'Op $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defenum Op
-            :states (List respo.schema/CoordKey) Dynamic
+            :set-viewer-content (List respo.schema/CoordKey) String
             :content String
             :hydrate-storage calcit-theme.types/StoreData
           :examples $ []
@@ -514,9 +514,9 @@
         %{} 'CodeEntry (:doc |)
           :code $ quote $ defn updater (store op op-id op-time)
             match op
-              (:states cursor state)
+              (:set-viewer-content cursor content)
                 assoc store :states $ decode-map-as
-                  update-state-tree (:states store) cursor state
+                  update-state-tree (:states store) cursor $ {} $ :content content
                   , Map
               (:content content) (assoc store :content content)
               (:hydrate-storage stored) stored

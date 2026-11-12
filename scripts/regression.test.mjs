@@ -12,7 +12,7 @@ import { restore_store } from '../js-out/calcit-theme.types.mjs';
 import { make_string } from '../js-out/respo.render.html.mjs';
 import { EffectParams, RespoEvent } from '../js-out/respo.schema.mjs';
 
-const t = clt.init_tags(['states', 'viewer', 'data', 'content', 'some', 'none', 'store', 'mount', 'event']);
+const t = clt.init_tags(['states', 'viewer', 'data', 'content', 'some', 'none', 'store', 'mount', 'event', 'set-viewer-content']);
 const map = clt._$n__$M_;
 const list = clt._$L_;
 const field = (v, k) => clt.option_$o_unwrap(clt.get(v, k));
@@ -56,7 +56,7 @@ test('public renderer handles nested expressions and empty expressions', () => {
 });
 
 test('typed state and content operations preserve one state tree', () => {
-  const next = updater(store, clt._PCT__$o__$o_(Op, t.states, list(t.viewer), map(t.content, 'state')), 'state', 1);
+  const next = updater(store, clt._PCT__$o__$o_(Op, t['set-viewer-content'], list(t.viewer), 'state'), 'state', 1);
   assert.equal(field(field(field(field(next, t.states), t.viewer), t.data), t.content), 'state');
   assert.equal(clt.contains_$q_(field(next, t.states), t.states), false);
   const content = updater(next, clt._PCT__$o__$o_(Op, t.content, 'source'), 'content', 2);
