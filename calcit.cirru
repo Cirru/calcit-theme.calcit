@@ -27,6 +27,7 @@
           :schema $ quote $ Fn (reel.typed/State calcit-theme.schema/Op calcit-theme.types/StoreData)
             Fn reel.typed/Control $ -> Unit
             -> respo.schema/Component
+            :features :state
         'css-body $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle css-body
             {} $ |$0 $ merge ui/global ui/fullscreen
@@ -137,7 +138,7 @@
                                   , false (= layout-kind :inline-expr)
                                 , tail (inc idx) layout-kind
           :examples $ []
-          :schema $ quote $ Fn (List calcit-theme.schema/CirruNode) Bool Bool Bool (-> respo.schema/Component) (:features :js-ffi)
+          :schema $ quote $ Fn (List calcit-theme.schema/CirruNode) Bool Bool Bool (-> respo.schema/Component) (:features :js-ffi :state)
         'comp-leaf $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-leaf (x head?)
             assert "|string for leaf" $ string? x
@@ -170,7 +171,7 @@
                 *highlight $ ref $ assert-type None (Option HighlightElementHost)
               if (= action :mount) (register-hover! el *highlight)
           :examples $ []
-          :schema $ quote $ Fn Bool (-> respo.schema/Effect) (:features :js-ffi)
+          :schema $ quote $ Fn Bool (-> respo.schema/Effect) (:features :js-ffi :state)
         'handle-active-event! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn handle-active-event! (e active?)
             let
@@ -202,7 +203,7 @@
           :examples $ []
           :schema $ quote $ Fn
             Ref $ Option HighlightElementHost
-            , HighlightEventHost (-> Unit) (:features :js-ffi)
+            , HighlightEventHost (-> Unit) (:features :js-ffi :state)
         'register-hover! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn register-hover! (el *highlight)
             .add-event-listener! (js-cast el HighlightElementHost) |mouseover $ fn (event) (handle-hover! *highlight event)
@@ -210,11 +211,11 @@
           :schema $ quote $ Fn respo.dom/DomElement
             Ref $ Option HighlightElementHost
             -> Unit
-            :features :js-ffi
+            :features :js-ffi :state
         'render-expr $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-expr (data) (comp-expr data false true false)
           :examples $ []
-          :schema $ quote $ Fn (List calcit-theme.schema/CirruNode) (-> respo.schema/Component)
+          :schema $ quote $ Fn (List calcit-theme.schema/CirruNode) (-> respo.schema/Component) (:features :state)
         'token-node? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn token-node? (node)
             match node
@@ -259,7 +260,7 @@
             reset! *reel $ reel.typed/record-op updater @*reel action (generate-id!) (js-ffi.shared/now-ms)
             , &unit
           :examples $ []
-          :schema $ quote $ Fn schema/Op (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn schema/Op (-> Unit) (:features :js-ffi :state)
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! ()
             println "|Running mode:" $ if config/dev? |dev |release
@@ -278,7 +279,7 @@
             repeat! 60 persist-storage!
             println "|App started."
           :examples $ []
-          :schema $ quote $ Fn (-> Unit)
+          :schema $ quote $ Fn (-> Unit) (:features :io :state)
         'mount-target $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn mount-target ()
             (respo.ffi.browser/query-selector |.app) .unwrap
@@ -289,7 +290,7 @@
             reset! *reel $ reel.typed/apply-control updater @*reel control
             , &unit
           :examples $ []
-          :schema $ quote $ Fn reel.typed/Control (-> Unit)
+          :schema $ quote $ Fn reel.typed/Control (-> Unit) (:features :state)
         'persist-storage! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn persist-storage! ()
             browser/storage-set!
@@ -297,7 +298,7 @@
                 , .unwrap
               format-cirru-edn $ :store @*reel
           :examples $ []
-          :schema $ quote $ Fn (-> Unit)
+          :schema $ quote $ Fn (-> Unit) (:features :state)
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! ()
             if (nil? build-errors)
@@ -309,14 +310,14 @@
               hud! |error build-errors
             , &unit
           :examples $ []
-          :schema $ quote $ Fn (-> Unit)
+          :schema $ quote $ Fn (-> Unit) (:features :io :state)
         'render-app! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-app! ()
             render-with! (mount-target)
               fn () $ comp-container @*reel on-control!
               , dispatch!
           :examples $ []
-          :schema $ quote $ Fn (-> Unit)
+          :schema $ quote $ Fn (-> Unit) (:features :state)
         'repeat! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn repeat! (duration cb)
             browser/set-timeout!
