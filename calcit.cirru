@@ -25,7 +25,7 @@
                   , None
           :examples $ []
           :schema $ quote $ Fn (reel.typed/State calcit-theme.schema/Op calcit-theme.types/StoreData)
-            Fn reel.typed/Control $ -> Unit
+            Fn reel.typed/Control (-> Unit) (:features :state)
             -> respo.schema/Component
             :features :state
         'css-body $ %{} 'CodeEntry (:doc |)
@@ -317,7 +317,7 @@
               fn () $ comp-container @*reel on-control!
               , dispatch!
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :state)
+          :schema $ quote $ Fn (-> Unit) (:features :io :state)
         'repeat! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn repeat! (duration cb)
             browser/set-timeout!
@@ -326,8 +326,9 @@
             , &unit
           :examples $ []
           :schema $ quote $ Fn Number
-            Fn $ -> Unit
+            Fn (-> Unit) (:features :state)
             -> Unit
+            :features :state
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns calcit-theme.main
           :require
