@@ -2,21 +2,21 @@
 
 Calcit JS 项目的 Cirru 语法高亮主题，从 ClojureScript 版本移植。
 
-## 0.6.3 候选的使用者影响
+## 0.6.4 候选的使用者影响
 
-将 Calcit CLI 和 `@calcit/procs` 一起升级到 **0.42.1**，重新安装依赖、生成 JS 并刷新页面。
+将 Calcit CLI 和 `@calcit/procs` 一起升级到 **0.43.0**，重新安装依赖、生成 JS 并刷新页面。
 `render-expr` 和 `comp-expr` 继续接收 `List<CirruNode>`。`CirruNode` 表示源码字符串或递归列表，
 源码中的数字、Bool 和 nil 字面量仍以字符串传入。
 
 Demo 使用 `State<Op, StoreData>`。业务派发接收具名的 `Op`，开发面板和快捷键通过同一个回调传递 `reel.typed/Control`。
 已有样式 union、宿主事件适配、旧存档恢复和 HUD 沿用原有合同。
-正式依赖为 Respo **0.19.5**、Reel **0.11.0**、UI **0.15.2**、JS-FFI **0.2.13**，传递依赖 Router **0.12.2**。
+正式依赖为 Respo **0.19.10**、Reel **0.11.2**、UI **0.15.4**、JS-FFI **0.2.18**，传递依赖 Router **0.12.8**。
 
 ## 存档与类型边界
 
 Demo 启动先恢复存档，再首次渲染和注册 beforeunload / 60 秒保存。恢复失败时停止，避免初始状态覆盖原值；不清空存档，不补业务默认值。旧 Map 经过字段校验，无来源的序列化 Struct 经受检 wire 解码重建本地 StoreData，不用名称替代名义身份；本地 Store 保留原对象。正常刷新不能代替所有坏存档保留性验收。
 
-存档恢复和 UI 状态更新保留原有数据校验。悬浮监听接收 Respo effect 提供的 `DomElement`，注册前仍验证宿主的高亮接口。原零预算门禁改用 0.42.1 的 `analyze weak-types`，要求完整类型覆盖，schema/code Dynamic、未解析类型槽、nil、unsafe 和弃用调用均为零。Demo 内部的 `Op :set-viewer-content` 接受 `CoordKey` 路径和 String，数据字段的 Dynamic 预算收紧至零。
+存档恢复和 UI 状态更新保留原有数据校验。悬浮监听接收 Respo effect 提供的 `DomElement`，注册前仍验证宿主的高亮接口。零预算门禁使用 `analyze weak-types`，要求完整类型覆盖，schema/code Dynamic、未解析类型槽、nil、unsafe 和弃用调用均为零。Demo 内部的 `Op :set-viewer-content` 接受 `CoordKey` 路径和 String，数据字段的 Dynamic 预算为零。
 
 ## 开发与验证
 
@@ -32,6 +32,7 @@ calcit test --require-match
 calcit analyze weak-types --only coverage --coverage-level none,partial --format json | jq -e '.data.definitions | length == 0'
 calcit analyze weak-types --only schema-dynamic,unresolved-type-slot,code-dynamic,code-nil,unsafe-coerce --format json | jq -e '.data.definitions | length == 0'
 calcit js
+calcit --reload-fn respo.render.html/make-string js
 yarn vite build --base=./
 node --test scripts/regression.test.mjs
 ```
