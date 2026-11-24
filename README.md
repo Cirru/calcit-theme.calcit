@@ -10,7 +10,7 @@ Calcit JS 项目的 Cirru 语法高亮主题，从 ClojureScript 版本移植。
 
 Demo 使用 `State<Op, StoreData>`。业务派发接收具名的 `Op`，开发面板和快捷键通过同一个回调传递 `reel.typed/Control`。
 已有样式 union、宿主事件适配、旧存档恢复和 HUD 沿用原有合同。
-正式依赖为 Respo **0.19.13**、Reel **0.11.5**、UI **0.15.7**、JS-FFI **0.2.19**，传递依赖 Router **0.12.11**。
+正式依赖为 Respo **0.19.16**、Reel **0.11.7**、UI **0.16.3**、JS-FFI **0.2.23**，传递依赖 Router **0.12.15**。
 
 ## 存档与类型边界
 
