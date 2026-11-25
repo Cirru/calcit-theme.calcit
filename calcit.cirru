@@ -167,9 +167,10 @@
           :schema $ quote String
         'effect-highlight $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defeffect effect-highlight (root?) (action el at?)
-            if root? $ let
-                *highlight $ ref $ assert-type None (Option HighlightElementHost)
-              if (= action :mount) (register-hover! el *highlight)
+            if (= root? true)
+              let
+                  *highlight $ ref $ assert-type None (Option HighlightElementHost)
+                if (= action :mount) (register-hover! el *highlight)
           :examples $ []
           :schema $ quote $ Fn Bool (-> respo.schema/Effect) (:features :js-ffi :state)
         'handle-active-event! $ %{} 'CodeEntry (:doc |)

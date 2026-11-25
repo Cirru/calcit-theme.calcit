@@ -33,6 +33,8 @@ test('public renderer handles nested expressions and empty expressions', () => {
   const root = { tagName: 'DIV', classList: { add() {}, remove() {} }, addEventListener(name, callback) { assert.equal(name, 'mouseover'); hover = callback; } };
   const effect = effect_highlight(true);
   effect_method(effect)(effect_args(effect), effectParams(root));
+  const nestedEffect = effect_highlight(false);
+  effect_method(nestedEffect)(effect_args(nestedEffect), effectParams({ addEventListener() { assert.fail('nested effect must not register a listener'); } }));
   const element = tagName => {
     const classes = new Set();
     return { tagName, classes, addEventListener() {}, classList: { add: name => { classes.add(name); }, remove: name => { classes.delete(name); } } };
