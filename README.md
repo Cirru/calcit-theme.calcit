@@ -2,15 +2,15 @@
 
 Calcit JS 项目的 Cirru 语法高亮主题，从 ClojureScript 版本移植。
 
-## 0.6.4 候选的使用者影响
+## 0.6.7 候选的使用者影响
 
-将 Calcit CLI 和 `@calcit/procs` 一起升级到 **0.45.1**，重新安装依赖、生成 JS 并刷新页面。
+将 Calcit CLI 和 `@calcit/procs` 一起升级到 **0.46.0**，重新安装依赖、生成 JS 并刷新页面。
 `render-expr` 和 `comp-expr` 继续接收 `List<CirruNode>`。`CirruNode` 表示源码字符串或递归列表，
 源码中的数字、Bool 和 nil 字面量仍以字符串传入。
 
 Demo 使用 `State<Op, StoreData>`。业务派发接收具名的 `Op`，开发面板和快捷键通过同一个回调传递 `reel.typed/Control`。
 已有样式 union、宿主事件适配、旧存档恢复和 HUD 沿用原有合同。
-正式依赖为 Respo **0.19.18**、Reel **0.11.9**、UI **0.16.5**、JS-FFI **0.2.24**，传递依赖 Router **0.12.17**。
+正式依赖为 Respo **0.20.0**、Reel **0.11.10**、UI **0.16.6**、JS-FFI **0.2.26**，传递依赖 Router **0.12.18**。
 
 ## 存档与类型边界
 
