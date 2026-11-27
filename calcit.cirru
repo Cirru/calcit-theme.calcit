@@ -167,7 +167,8 @@
           :schema $ quote String
         'effect-highlight $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defeffect effect-highlight (root?) (action el at?)
-            if (= root? true)
+            if
+              if (bool? root?) root? false
               let
                   *highlight $ ref $ assert-type None (Option HighlightElementHost)
                 if (= action :mount) (register-hover! el *highlight)
